@@ -1,0 +1,14 @@
+#Fetched from the conan docs
+os: linux
+language: python
+python: "3.7"
+dist: xenial
+compiler:
+  - gcc
+install:
+  - pip install conan
+  - conan user
+script:
+  - conan install .
+  - conan build .
+  - ctest .
