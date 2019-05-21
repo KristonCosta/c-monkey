@@ -1,6 +1,9 @@
 #pragma once
+#include <functional>
 #include <string>
 #include <token.hpp>
+
+const std::string LEXER_LOGGER = "lexer";
 
 class Lexer {
   std::string input;
@@ -11,7 +14,11 @@ class Lexer {
  private:
   void readChar();
   void skipWhitespace();
+  char peek();
   std::string readIdentifier();
+  std::string readNumber();
+
+  std::string extactWhile(std::function<bool(char)> condition);
 
  public:
   Lexer(std::string input);

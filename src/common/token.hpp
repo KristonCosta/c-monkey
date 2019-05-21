@@ -37,3 +37,4 @@ class Token {
 };
 
 TokenType lookupIdentity(std::string identity);
+std::string tokenTypeToString(TokenType type);

@@ -57,7 +57,7 @@ TEST_CASE("Basic token parsing", "[lexer]") {
   auto lexer = Lexer::from(input);
   for (const Pair &pair : testPairs) {
     auto tok = lexer->nextToken();
-    REQUIRE(tok->type == pair.type);
+    REQUIRE(tokenTypeToString(tok->type) == tokenTypeToString(pair.type));
     REQUIRE(tok->literal == pair.literal);
   }
 };
