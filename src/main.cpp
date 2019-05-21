@@ -1,8 +1,13 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 #include <iostream>
+#include <lexer.hpp>
 #include <random>
-#include "lexer/lexer.hpp"
+#include <repl.hpp>
+
+void registerLogger(std::string name, uint suffix) {
+  spdlog::basic_logger_mt(name, fmt::format("{}-{}.log", name, suffix));
+}
 
 int main() {
   std::random_device rd;
@@ -10,7 +15,7 @@ int main() {
   std::uniform_int_distribution<uint> dist(1, 4294967295);
   auto suffix = dist(mt);
   spdlog::info("Creating log files with suffix: {}", suffix);
-  auto lexer_logger = spdlog::basic_logger_mt(
-      LEXER_LOGGER, fmt::format("{}-{}.log", LEXER_LOGGER, suffix));
-  lexer_logger->info("Hello world");
+  registerLogger(LEXER_LOGGER, suffix);
+
+  Repl::run();
 }

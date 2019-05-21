@@ -10,8 +10,10 @@ Token::Token(TokenType type, std::string literal)
     : type(type), literal(std::move(literal)) {}
 
 std::map<std::string, TokenType> keywords = {
-    {"fn", TokenType::FUNCTION},
-    {"let", TokenType::LET},
+    {"fn", TokenType::FUNCTION},   {"let", TokenType::LET},
+    {"true", TokenType::TRUE},     {"false", TokenType::FALSE},
+    {"if", TokenType::IF},         {"else", TokenType::ELSE},
+    {"return", TokenType::RETURN},
 };
 
 TokenType lookupIdentity(std::string identity) {
@@ -52,6 +54,32 @@ std::string tokenTypeToString(TokenType type) {
       return "FUNCTION";
     case TokenType::LET:
       return "LET";
+    case TokenType::BANG:
+      return "BANG";
+    case TokenType::MINUS:
+      return "MINUS";
+    case TokenType::ASTERISK:
+      return "ASTERISK";
+    case TokenType::SLASH:
+      return "SLASH";
+    case TokenType::LT:
+      return "LT";
+    case TokenType::GT:
+      return "RT";
+    case TokenType::TRUE:
+      return "TRUE";
+    case TokenType::FALSE:
+      return "FALSE";
+    case TokenType::IF:
+      return "IF";
+    case TokenType::ELSE:
+      return "ELSE";
+    case TokenType::RETURN:
+      return "RETURN";
+    case TokenType::NE:
+      return "NE";
+    case TokenType::EQ:
+      return "EQ";
   }
   throw "Token type doesn't exist!";
 }
