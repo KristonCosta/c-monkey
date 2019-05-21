@@ -9,6 +9,7 @@ install:
   - pip install conan
   - conan user
 script:
-  - conan install .
-  - conan build .
-  - ctest .
+  - mkdir build && cd build
+  - conan install .. --build fmt
+  - conan build ..
+  - ctest 

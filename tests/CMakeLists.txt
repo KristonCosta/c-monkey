@@ -2,10 +2,7 @@ project(CMonkeyTests)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include(CTest)
 include(${CMAKE_SOURCE_DIR}/cmake/ParseAndAddCatchTests.cmake)
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
 
 set(TEST_FILES 
     tests.cpp

@@ -1,8 +1,8 @@
 #include "repl.hpp"
-#include <fmt/printf.h>
 #include <iostream>
 #include <lexer.hpp>
 #include <string>
+
 namespace Repl {
 void run() {
   const std::string prompt = ">> ";
