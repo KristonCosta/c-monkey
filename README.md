@@ -7,8 +7,16 @@ pip install conan
 mkdir build 
 cd build 
 conan install ..
-cmake ..
-cmake --build .
-cd bin
-./main
+conan build ..
+./bin/main
+```
+
+### Test instructions 
+Run either command in build directory:
+```
+ctest 
+```
+or 
+```
+./tests/bin/tests
 ```
