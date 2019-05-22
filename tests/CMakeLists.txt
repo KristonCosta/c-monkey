@@ -6,7 +6,8 @@ include(${CMAKE_SOURCE_DIR}/cmake/ParseAndAddCatchTests.cmake)
 
 set(TEST_FILES 
     tests.cpp
-    lexer.cpp)
+    lexer.cpp
+    parser.cpp)
 
 add_executable(tests ${TEST_FILES})
 

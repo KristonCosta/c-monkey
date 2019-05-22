@@ -23,5 +23,5 @@ class Lexer {
  public:
   Lexer(std::string input);
   static std::unique_ptr<Lexer> from(std::string input);
-  std::unique_ptr<Token> nextToken();
+  std::shared_ptr<Token> nextToken();
 };

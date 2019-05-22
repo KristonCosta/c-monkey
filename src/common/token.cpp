@@ -65,7 +65,7 @@ std::string tokenTypeToString(TokenType type) {
     case TokenType::LT:
       return "LT";
     case TokenType::GT:
-      return "RT";
+      return "GT";
     case TokenType::TRUE:
       return "TRUE";
     case TokenType::FALSE:

@@ -25,7 +25,7 @@ void Lexer::readChar() {
   spdlog::get(LEXER_LOGGER)->info("Reading character: '{}'", this->tok);
 }
 
-std::unique_ptr<Token> Lexer::nextToken() {
+std::shared_ptr<Token> Lexer::nextToken() {
   spdlog::get(LEXER_LOGGER)->info("Getting next token '{}'", this->tok);
   this->skipWhitespace();
 
@@ -94,14 +94,14 @@ std::unique_ptr<Token> Lexer::nextToken() {
   if (type == TokenType::ILLEGAL) {
     if (isalpha(this->tok)) {
       auto identifier = this->readIdentifier();
-      return std::make_unique<Token>(lookupIdentity(identifier), identifier);
+      return std::make_shared<Token>(lookupIdentity(identifier), identifier);
     } else if (isdigit(this->tok)) {
       auto number = this->readNumber();
-      return std::make_unique<Token>(TokenType::INTEGER, number);
+      return std::make_shared<Token>(TokenType::INTEGER, number);
     }
   }
   spdlog::get(LEXER_LOGGER)->info("Token type '{}'", tokenTypeToString(type));
-  auto token = std::make_unique<Token>(type, literal);
+  auto token = std::make_shared<Token>(type, literal);
   this->readChar();
   return token;
 }
