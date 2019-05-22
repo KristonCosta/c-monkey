@@ -13,8 +13,11 @@ class Program : Node {
     }
     return "";
   };
+
   auto begin() { return this->statements.begin(); }
+
   const uint64_t size() { return this->statements.size(); }
+
   void addStatement(std::shared_ptr<Statement> statement) {
     this->statements.push_back(statement);
   }

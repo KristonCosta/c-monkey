@@ -14,8 +14,8 @@ std::unique_ptr<Program> Parser::parseProgram() {
 
     auto stmt = this->parseStatement();
 
-    spdlog::get(PARSER_LOGGER)->info("Adding statement {}", stmt->toString());
     if (stmt) {
+      spdlog::get(PARSER_LOGGER)->info("Adding statement {}", stmt->toString());
       program->addStatement(stmt);
     }
     this->nextToken();
@@ -64,6 +64,12 @@ bool Parser::expectPeek(TokenType type) {
     this->nextToken();
     return true;
   } else {
+    std::cout << "Adding error" << std::endl;
+    this->addError(
+        this->peekToken,
+        fmt::format("Expected {} but found {}", tokenTypeToString(type),
+                    tokenTypeToString(this->peekToken->type)));
+    std::cout << "Added error" << std::endl;
     return false;
   }
 }
