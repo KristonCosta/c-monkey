@@ -7,12 +7,12 @@
 #include <parser.hpp>
 
 TEST_CASE("Let statement parsing", "[parser]") {
-  // spdlog::stdout_color_mt(PARSER_LOGGER);
+  spdlog::stdout_color_mt(PARSER_LOGGER);
 
   std::string input =
-      "let x = 5;\
-      let y = 10;\
-      let foobar = 838383;";
+      R"V0G0N(let x = 5;
+let y = 10;
+let foobar = 838383;)V0G0N";
   std::string expectedIdentifiers[] = {"x", "y", "foobar"};
   auto lexer = Lexer::from(input);
   auto parser = Parser::from(std::move(lexer));

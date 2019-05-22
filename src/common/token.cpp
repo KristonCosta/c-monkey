@@ -3,11 +3,14 @@
 #include <iostream>
 #include <map>
 
-Token::Token(TokenType type, char token)
-    : type(type), literal(std::string(1, token)) {}
+Token::Token(std::unique_ptr<Location> location, TokenType type, char token)
+    : location(std::move(location)),
+      type(type),
+      literal(std::string(1, token)) {}
 
-Token::Token(TokenType type, std::string literal)
-    : type(type), literal(std::move(literal)) {}
+Token::Token(std::unique_ptr<Location> location, TokenType type,
+             std::string literal)
+    : location(std::move(location)), type(type), literal(std::move(literal)) {}
 
 std::map<std::string, TokenType> keywords = {
     {"fn", TokenType::FUNCTION},   {"let", TokenType::LET},

@@ -8,11 +8,21 @@
 #include <iostream>
 
 Lexer::Lexer(std::string input)
-    : input(std::move(input)), position(0), readPosition(0), tok('\0') {
+    : input(std::move(input)),
+      position(0),
+      readPosition(0),
+      currentLine(0),
+      tok('\0'),
+      columnOffset(0) {
   if (!spdlog::get(LEXER_LOGGER)) {
     spdlog::create<spdlog::sinks::null_sink_st>(LEXER_LOGGER);
   }
 };
+
+std::unique_ptr<Location> Lexer::getLocation(std::uint64_t startPosition) {
+  return std::make_unique<Location>(this->currentLine,
+                                    startPosition - this->columnOffset);
+}
 
 void Lexer::readChar() {
   if (this->readPosition >= this->input.size()) {
@@ -31,6 +41,8 @@ std::shared_ptr<Token> Lexer::nextToken() {
 
   TokenType type = TokenType::ILLEGAL;
   std::string literal = std::string(1, this->tok);
+  auto position = this->position;
+
   switch (this->tok) {
     case '=':
       if (this->peek() == '=') {
@@ -94,14 +106,17 @@ std::shared_ptr<Token> Lexer::nextToken() {
   if (type == TokenType::ILLEGAL) {
     if (isalpha(this->tok)) {
       auto identifier = this->readIdentifier();
-      return std::make_shared<Token>(lookupIdentity(identifier), identifier);
+      return std::make_shared<Token>(this->getLocation(position),
+                                     lookupIdentity(identifier), identifier);
     } else if (isdigit(this->tok)) {
       auto number = this->readNumber();
-      return std::make_shared<Token>(TokenType::INTEGER, number);
+      return std::make_shared<Token>(this->getLocation(position),
+                                     TokenType::INTEGER, number);
     }
   }
   spdlog::get(LEXER_LOGGER)->info("Token type '{}'", tokenTypeToString(type));
-  auto token = std::make_shared<Token>(type, literal);
+  auto token =
+      std::make_shared<Token>(this->getLocation(position), type, literal);
   this->readChar();
   return token;
 }
@@ -134,7 +149,12 @@ std::string Lexer::extactWhile(std::function<bool(char)> condition) {
 
 void Lexer::skipWhitespace() {
   while (isspace(this->tok)) {
+    auto tok = this->tok;
     this->readChar();
+    if (tok == '\n') {
+      this->currentLine++;
+      this->columnOffset = this->position;
+    }
   }
 }
 

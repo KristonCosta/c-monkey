@@ -6,14 +6,11 @@ struct Pair {
   std::string literal;
 };
 TEST_CASE("Basic token parsing", "[lexer]") {
-  std::string input =
-      "let five = 5; \
-  let ten = 10; \
-  \
-  let add = fn(x, y) {\
-    x + y;\
-  };\
-  let result = add(five, ten);";
+  std::string input = R"V0G0N(let five = 5; 
+let ten = 10;
+
+let add = fn(x, y) { x + y; };
+let result = add(five, ten);)V0G0N";
 
   Pair testPairs[] = {
       Pair{TokenType::LET, "let"},
@@ -64,14 +61,14 @@ TEST_CASE("Basic token parsing", "[lexer]") {
 
 TEST_CASE("Advanced token parsing", "[lexer]") {
   std::string input =
-      "!-/*5;\
-  5 < 10 > 5;\
-  \
-  if (5 < 10) {\
-    return true; \
-  } else { \
-    return false;\
-  }";
+      R"V0G0N(!-/*5;
+5 < 10 > 5;
+  
+if (5 < 10) {
+  return true; 
+} else { 
+  return false;
+})V0G0N";
 
   Pair testPairs[] = {
       Pair{TokenType::BANG, "!"},
@@ -114,9 +111,10 @@ TEST_CASE("Advanced token parsing", "[lexer]") {
 }
 TEST_CASE("Multichar token parsing", "[lexer]") {
   std::string input =
-      "let seven = 7;\
-      10 == seven;\
-      10 != 9;";
+      R"V0G0N(
+let seven = 7;
+10 == seven;
+10 != 9;)V0G0N";
 
   Pair testPairs[] = {
       Pair{TokenType::LET, "let"},

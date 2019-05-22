@@ -46,15 +46,30 @@ enum class TokenType : std::uint8_t {
 TokenType lookupIdentity(std::string identity);
 std::string tokenTypeToString(TokenType type);
 
+struct Location {
+  uint64_t lineNumber;
+  uint64_t columnNumber;
+  Location(uint64_t lineNumber, uint64_t columnNumber)
+      : lineNumber(lineNumber), columnNumber(columnNumber) {}
+  template <typename OStream>
+  friend OStream &operator<<(OStream &os, const Location &c) {
+    return os << "[line=" << c.lineNumber << " column=" << c.columnNumber
+              << "]";
+  }
+};
+
 class Token {
  public:
   const TokenType type;
   const std::string literal;
-  Token(TokenType type, char token);
-  Token(TokenType type, std::string literal);
+  const std::unique_ptr<Location> location;
+  Token(std::unique_ptr<Location> location, TokenType type, char token);
+  Token(std::unique_ptr<Location> location, TokenType type,
+        std::string literal);
   template <typename OStream>
   friend OStream &operator<<(OStream &os, const Token &c) {
-    return os << "[token type=" << tokenTypeToString(c.type)
+    return os << "[token location" << *c.location
+              << ", type=" << tokenTypeToString(c.type)
               << ", literal=" << c.literal << "]";
   }
 };
