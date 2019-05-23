@@ -79,6 +79,38 @@ class IntegerLiteral : public Expression {
   const int getValue() { return this->value; }
 };
 
+class InfixExpression : public Expression {
+ private:
+  std::shared_ptr<Token> token;
+  std::shared_ptr<Expression> left;
+  std::shared_ptr<Expression> right;
+  Operator op;
+
+ public:
+  InfixExpression(std::shared_ptr<Token> token,
+                  std::shared_ptr<Expression> left,
+                  std::shared_ptr<Expression> right, Operator op)
+      : token(token), left(left), right(right), op(op) {}
+
+  virtual std::string literal() const override { return token->literal; };
+  virtual std::string toString() const override {
+    std::stringstream ss;
+    ss << "(" << this->left->toString() << " " << this->op << " "
+       << this->right->toString() << ")";
+    return ss.str();
+  };
+  std::string toDebugString() const override {
+    std::stringstream ss;
+    ss << "[infix"
+       << " token=" << *this->token << " left=" << this->left->toString()
+       << " right=" << this->right->toString() << " op=" << this->op << "]";
+    return ss.str();
+  }
+  const std::shared_ptr<Expression> getLeft() { return this->left; }
+  const std::shared_ptr<Expression> getRight() { return this->right; }
+  const Operator getOp() { return this->op; }
+};
+
 class PrefixExpression : public Expression {
  private:
   std::shared_ptr<Token> token;

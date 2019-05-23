@@ -2,9 +2,55 @@
 #include <iostream>
 #include <parser.hpp>
 
+std::map<TokenType, Precedence> precedences = {
+    {TokenType::EQ, Precedence::EQUALS},
+    {TokenType::NE, Precedence::EQUALS},
+    {TokenType::LT, Precedence::LESSGREATER},
+    {TokenType::GT, Precedence::LESSGREATER},
+    {TokenType::PLUS, Precedence::SUM},
+    {TokenType::MINUS, Precedence::SUM},
+    {TokenType::SLASH, Precedence::PRODUCT},
+    {TokenType::ASTERISK, Precedence::PRODUCT}};
+
+std::string precedenceToString(Precedence prec) {
+  switch (prec) {
+    case Precedence::BOTTOM:
+      return "BOTTOM";
+    case Precedence::EQUALS:
+      return "EQUALS";
+    case Precedence::LESSGREATER:
+      return "LESSGREATER";
+    case Precedence::SUM:
+      return "SUM";
+    case Precedence::PRODUCT:
+      return "PRODUCT";
+    case Precedence::PREFIX:
+      return "PREFIX";
+    case Precedence::CALL:
+      return "CALL";
+  }
+  return "UNKNOWN";
+}
+
 void Parser::nextToken() {
   this->currentToken = this->peekToken;
   this->peekToken = this->lexer->nextToken();
+}
+
+Precedence lookupPrecedence(TokenType type) {
+  auto pair = precedences.find(type);
+  if (pair == precedences.end()) {
+    return Precedence::BOTTOM;
+  }
+  return pair->second;
+}
+
+Precedence Parser::peekPrecedence() {
+  return lookupPrecedence(this->peekToken->type);
+}
+
+Precedence Parser::currentPrecedence() {
+  return lookupPrecedence(this->currentToken->type);
 }
 
 std::unique_ptr<Program> Parser::parseProgram() {
@@ -38,7 +84,7 @@ std::shared_ptr<Statement> Parser::parseExpressionStatement() {
   auto tok = this->currentToken;
   auto stmt = std::make_shared<ExpressionStatement>(
       tok, this->parseExpression(Precedence::BOTTOM));
-  while (!this->currentTokenIs(TokenType::SEMICOLON)) {
+  if (this->peekTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   };
   return std::dynamic_pointer_cast<Statement>(stmt);
@@ -46,6 +92,8 @@ std::shared_ptr<Statement> Parser::parseExpressionStatement() {
 
 std::shared_ptr<Expression> Parser::parseExpression(Precedence prec) {
   auto prefixFnPair = this->prefixParseFunctions.find(this->currentToken->type);
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing expression {}", *this->currentToken);
   if (prefixFnPair == this->prefixParseFunctions.end()) {
     this->addError(this->currentToken,
                    fmt::format("No prefix expression found for {}",
@@ -53,7 +101,29 @@ std::shared_ptr<Expression> Parser::parseExpression(Precedence prec) {
     return nullptr;
   }
   auto fn = prefixFnPair->second;
-  return (this->*fn)();
+  auto left = (this->*fn)();
+  spdlog::get(PARSER_LOGGER)->info("Set left function to {}", left->toString());
+  while (!this->peekTokenIs(TokenType::SEMICOLON) &&
+         prec < this->peekPrecedence()) {
+    spdlog::get(PARSER_LOGGER)
+        ->info("Finding right expression {}", *this->peekToken);
+    auto infixFnPair = this->infixParseFunctions.find(this->peekToken->type);
+    if (infixFnPair == this->infixParseFunctions.end()) {
+      spdlog::get(PARSER_LOGGER)
+          ->info("Didn't find infix function {}", *this->peekToken);
+      return left;
+    }
+    this->nextToken();
+    spdlog::get(PARSER_LOGGER)
+        ->info("Found infix function {}", *this->currentToken);
+    auto infixFn = infixFnPair->second;
+    left = (this->*infixFn)(left);
+    spdlog::get(PARSER_LOGGER)
+        ->info("Set left function to {}", left->toString());
+  };
+  spdlog::get(PARSER_LOGGER)
+      ->info("Returning left function {}", left->toString());
+  return left;
 }
 
 std::shared_ptr<Expression> Parser::parsePrefixExpression() {
@@ -61,6 +131,20 @@ std::shared_ptr<Expression> Parser::parsePrefixExpression() {
   this->nextToken();
   auto right = this->parseExpression(Precedence::PREFIX);
   auto expr = std::make_shared<PrefixExpression>(tok, right, tok->literal);
+  return std::dynamic_pointer_cast<Expression>(expr);
+}
+
+std::shared_ptr<Expression> Parser::parseInfixExpression(
+    std::shared_ptr<Expression> left) {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing infix for {} with prec {}", *this->currentToken,
+             precedenceToString(this->currentPrecedence()));
+  auto tok = this->currentToken;
+  auto prec = this->currentPrecedence();
+  this->nextToken();
+  auto right = this->parseExpression(prec);
+  auto expr = std::make_shared<InfixExpression>(tok, left, right, tok->literal);
+  spdlog::get(PARSER_LOGGER)->info("Returning infix for {}", *tok);
   return std::dynamic_pointer_cast<Expression>(expr);
 }
 

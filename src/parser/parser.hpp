@@ -49,6 +49,10 @@ class Parser {
   std::shared_ptr<Expression> parseIdentifier();
   std::shared_ptr<Expression> parseIntegerLiteral();
   std::shared_ptr<Expression> parsePrefixExpression();
+  std::shared_ptr<Expression> parseInfixExpression(std::shared_ptr<Expression>);
+
+  Precedence peekPrecedence();
+  Precedence currentPrecedence();
 
   void addError(std::shared_ptr<Token> token, std::string message) {
     this->_errors.push_back(std::make_shared<ParserError>(token, message));
@@ -67,12 +71,23 @@ class Parser {
 
   static std::unique_ptr<Parser> from(std::unique_ptr<Lexer> lexer) {
     auto parser = std::make_unique<Parser>(std::move(lexer));
+
     parser->nextToken();
     parser->nextToken();
+
     parser->registerPrefix(TokenType::IDENT, &Parser::parseIdentifier);
     parser->registerPrefix(TokenType::INTEGER, &Parser::parseIntegerLiteral);
     parser->registerPrefix(TokenType::BANG, &Parser::parsePrefixExpression);
     parser->registerPrefix(TokenType::MINUS, &Parser::parsePrefixExpression);
+
+    parser->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::SLASH, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::ASTERISK, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::EQ, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::NE, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::LT, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::GT, &Parser::parseInfixExpression);
     return std::move(parser);
   }
 
