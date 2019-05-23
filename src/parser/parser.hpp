@@ -14,9 +14,9 @@ const std::string PARSER_LOGGER = "parser";
 
 class Parser;
 
-typedef std::shared_ptr<Expression> (Parser::*PrefixParseFunction)();
-typedef std::shared_ptr<Expression> (Parser::*InfixParseFunction)(
-    std::shared_ptr<Expression>);
+typedef std::shared_ptr<AST::Expression> (Parser::*PrefixParseFunction)();
+typedef std::shared_ptr<AST::Expression> (Parser::*InfixParseFunction)(
+    std::shared_ptr<AST::Expression>);
 
 enum class Precedence : std::uint8_t {
   BOTTOM = 1,
@@ -40,16 +40,17 @@ class Parser {
 
   void nextToken();
 
-  std::shared_ptr<Statement> parseStatement();
-  std::shared_ptr<Statement> parseLetStatement();
-  std::shared_ptr<Statement> parseReturnStatement();
-  std::shared_ptr<Statement> parseExpressionStatement();
+  std::shared_ptr<AST::Statement> parseStatement();
+  std::shared_ptr<AST::Statement> parseLetStatement();
+  std::shared_ptr<AST::Statement> parseReturnStatement();
+  std::shared_ptr<AST::Statement> parseExpressionStatement();
 
-  std::shared_ptr<Expression> parseExpression(Precedence);
-  std::shared_ptr<Expression> parseIdentifier();
-  std::shared_ptr<Expression> parseIntegerLiteral();
-  std::shared_ptr<Expression> parsePrefixExpression();
-  std::shared_ptr<Expression> parseInfixExpression(std::shared_ptr<Expression>);
+  std::shared_ptr<AST::Expression> parseExpression(Precedence);
+  std::shared_ptr<AST::Expression> parseIdentifier();
+  std::shared_ptr<AST::Expression> parseIntegerLiteral();
+  std::shared_ptr<AST::Expression> parsePrefixExpression();
+  std::shared_ptr<AST::Expression> parseInfixExpression(
+      std::shared_ptr<AST::Expression>);
 
   Precedence peekPrecedence();
   Precedence currentPrecedence();
@@ -91,7 +92,7 @@ class Parser {
     return std::move(parser);
   }
 
-  std::unique_ptr<Program> parseProgram();
+  std::unique_ptr<AST::Program> parseProgram();
 
   const std::list<std::shared_ptr<ParserError>> &errors() {
     return this->_errors;

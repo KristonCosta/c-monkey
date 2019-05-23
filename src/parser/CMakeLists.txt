@@ -1,6 +1,7 @@
 project(CMonkeyParser) 
 
 add_library(${PROJECT_NAME} 
+  ast.cpp
   parser.cpp) 
 
 target_include_directories(${PROJECT_NAME}

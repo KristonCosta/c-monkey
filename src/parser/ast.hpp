@@ -5,32 +5,91 @@
 #include <string>
 #include <token.hpp>
 
+namespace AST {
 typedef std::string Operator;
 
+class Node;
+class Statement;
+class Expression;
+class Program;
+class Identifier;
+class IntegerLiteral;
+class PrefixExpression;
+class InfixExpression;
+class ReturnStatement;
+class ExpressionStatement;
+class LetStatement;
+
+class AbstractDispatcher {
+ public:
+  virtual void dispatch(Node &node) = 0;
+  virtual void dispatch(Statement &node) = 0;
+  virtual void dispatch(Expression &node) = 0;
+  virtual void dispatch(Program &node) = 0;
+  virtual void dispatch(Identifier &node) = 0;
+  virtual void dispatch(IntegerLiteral &node) = 0;
+  virtual void dispatch(PrefixExpression &node) = 0;
+  virtual void dispatch(InfixExpression &node) = 0;
+  virtual void dispatch(ReturnStatement &node) = 0;
+  virtual void dispatch(ExpressionStatement &node) = 0;
+  virtual void dispatch(LetStatement &node) = 0;
+};
+
+/*
+
+  Base Types
+
+*/
 class Node {
  public:
-  virtual std::string literal() const = 0;
-  virtual std::string toString() const = 0;
+  virtual std::string tokenLiteral() const = 0;
   virtual std::string toDebugString() const = 0;
+  virtual void visit(AbstractDispatcher &dispatcher) = 0;
 };
 
 class Statement : Node {
  public:
-  virtual std::string literal() const override { return "base_statement"; };
-  virtual std::string toString() const override { return this->literal(); };
-  virtual std::string toDebugString() const override {
-    return fmt::format("[statement literal={}]", this->literal());
-  };
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
 };
 
 class Expression : Node {
  public:
-  virtual std::string literal() const override { return "base_expression"; };
-  virtual std::string toString() const override { return this->literal(); };
-  virtual std::string toDebugString() const override {
-    return fmt::format("[expression literal={}]", this->literal());
-  };
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
 };
+
+/*
+
+  High-level node types
+
+*/
+class Program : public Node {
+ private:
+  std::list<std::shared_ptr<Statement>> statements;
+
+ public:
+  const std::list<std::shared_ptr<Statement>> &getStatements() const;
+  const uint64_t size();
+  void addStatement(std::shared_ptr<Statement> statement);
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+/*
+
+  Expression Types
+
+*/
 
 class Identifier : public Expression {
  private:
@@ -40,19 +99,13 @@ class Identifier : public Expression {
  public:
   Identifier(std::shared_ptr<Token> token, std::string value)
       : token(token), value(value) {}
-  virtual std::string literal() const override { return token->literal; };
-  virtual std::string toString() const override { return this->value; };
-  std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[identifier";
-    if (this->token) {
-      ss << " token=" << *this->token;
-    }
-    ss << " value=" << this->value << "]";
-    return ss.str();
-  }
 
-  const std::string getValue() { return this->value; }
+  const std::string getValue();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
 };
 
 class IntegerLiteral : public Expression {
@@ -64,19 +117,37 @@ class IntegerLiteral : public Expression {
   IntegerLiteral(std::shared_ptr<Token> token, int value)
       : token(token), value(value) {}
 
-  virtual std::string literal() const override { return token->literal; };
-  virtual std::string toString() const override { return this->literal(); };
-  std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[integer";
-    if (this->token) {
-      ss << " token=" << *this->token;
-    }
-    ss << " value=" << this->value << "]";
-    return ss.str();
+  const int getValue();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
   }
+};
 
-  const int getValue() { return this->value; }
+/*
+
+  Expression Types - operators
+
+*/
+class PrefixExpression : public Expression {
+ private:
+  std::shared_ptr<Token> token;
+  std::shared_ptr<Expression> right;
+  Operator op;
+
+ public:
+  PrefixExpression(std::shared_ptr<Token> token,
+                   std::shared_ptr<Expression> right, Operator op)
+      : token(token), right(right), op(op) {}
+
+  const std::shared_ptr<Expression> getRight();
+  const Operator getOp();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
 };
 
 class InfixExpression : public Expression {
@@ -92,96 +163,21 @@ class InfixExpression : public Expression {
                   std::shared_ptr<Expression> right, Operator op)
       : token(token), left(left), right(right), op(op) {}
 
-  virtual std::string literal() const override { return token->literal; };
-  virtual std::string toString() const override {
-    std::stringstream ss;
-    ss << "(" << this->left->toString() << " " << this->op << " "
-       << this->right->toString() << ")";
-    return ss.str();
-  };
-  std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[infix"
-       << " token=" << *this->token << " left=" << this->left->toString()
-       << " right=" << this->right->toString() << " op=" << this->op << "]";
-    return ss.str();
-  }
-  const std::shared_ptr<Expression> getLeft() { return this->left; }
-  const std::shared_ptr<Expression> getRight() { return this->right; }
-  const Operator getOp() { return this->op; }
-};
-
-class PrefixExpression : public Expression {
- private:
-  std::shared_ptr<Token> token;
-  std::shared_ptr<Expression> right;
-  Operator op;
-
- public:
-  PrefixExpression(std::shared_ptr<Token> token,
-                   std::shared_ptr<Expression> right, Operator op)
-      : token(token), right(right), op(op) {}
-
-  virtual std::string literal() const override { return token->literal; };
-  virtual std::string toString() const override {
-    std::stringstream ss;
-    ss << "(" << this->op << this->right->toString() << ")";
-    return ss.str();
-  };
-  std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[prefix";
-    if (this->token) {
-      ss << " token=" << *this->token;
-    }
-    if (this->right) {
-      ss << " right=" << this->right->toDebugString();
-    }
-    ss << " op=" << this->op << "]";
-    return ss.str();
-  }
-
-  const std::shared_ptr<Expression> getRight() { return this->right; }
-  const Operator getOp() { return this->op; }
-};
-
-class Program : Node {
- private:
-  std::list<std::shared_ptr<Statement>> statements;
-
- public:
-  virtual std::string literal() const override {
-    if (this->statements.size() > 0) {
-      return this->statements.front()->literal();
-    }
-    return "";
-  };
-
-  auto begin() { return this->statements.begin(); }
-
-  const uint64_t size() { return this->statements.size(); }
-
-  void addStatement(std::shared_ptr<Statement> statement) {
-    this->statements.push_back(statement);
-  }
-  virtual std::string toString() const override {
-    std::stringstream ss;
-    for (const auto& statement : this->statements) {
-      ss << statement->toString();
-    }
-    return ss.str();
-  };
-  std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[program" << std::endl;
-    for (const auto& statement : statements) {
-      ss << statement->toDebugString() << std::endl;
-    }
-    ss << "]";
-    return ss.str();
+  const std::shared_ptr<Expression> getLeft();
+  const std::shared_ptr<Expression> getRight();
+  const Operator getOp();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
   }
 };
 
+/*
+
+  Statement Types
+
+*/
 class ReturnStatement : public Statement {
  private:
   std::shared_ptr<Token> token;
@@ -189,24 +185,11 @@ class ReturnStatement : public Statement {
 
  public:
   ReturnStatement(std::shared_ptr<Token> token) : token(token){};
-  virtual std::string literal() const override { return token->literal; };
-  virtual std::string toString() const override {
-    std::stringstream ss;
-    ss << this->literal() << " ";
-    if (this->returnValue) {
-      ss << this->returnValue->toString();
-    }
-    ss << ";";
-    return ss.str();
-  };
-  std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[return token=" << *this->token;
-    if (this->returnValue) {
-      ss << " returnValue=" << this->returnValue->toDebugString();
-    }
-    ss << "]";
-    return ss.str();
+  std::shared_ptr<Expression> getReturnValue() const;
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
   }
 };
 
@@ -220,27 +203,12 @@ class ExpressionStatement : public Statement {
                       std::shared_ptr<Expression> expression)
       : token(token), expression(expression){};
 
-  virtual std::string literal() const override { return token->literal; };
-
-  virtual std::string toString() const override {
-    std::stringstream ss;
-    if (this->expression) {
-      ss << this->expression->toString();
-    }
-    return ss.str();
-  };
-
-  std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[expression token=" << *this->token;
-    if (this->expression) {
-      ss << " expression=" << this->expression->toDebugString();
-    }
-    ss << "]";
-    return ss.str();
+  std::shared_ptr<Expression> getExpression() const;
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
   }
-
-  std::shared_ptr<Expression> getExpression() const { return this->expression; }
 };
 
 class LetStatement : public Statement {
@@ -252,42 +220,20 @@ class LetStatement : public Statement {
  public:
   LetStatement(std::shared_ptr<Token> token)
       : token(token), name(nullptr), value(nullptr){};
+
   LetStatement(std::shared_ptr<Token> token, std::shared_ptr<Identifier> name,
                std::shared_ptr<Expression> value)
       : token(token), name(name), value(value){};
 
-  virtual std::string literal() const override { return token->literal; };
-  virtual std::string toString() const override {
-    std::stringstream ss;
-    ss << this->literal() << " ";
-    ss << this->name->toString() << " = ";
-    if (this->value) {
-      ss << this->value->toString();
-    }
-    ss << ";";
-    return ss.str();
-  };
-  virtual std::string toDebugString() const override {
-    std::stringstream ss;
-    ss << "[letstatement";
-    if (this->token) {
-      ss << " token=" << *this->token;
-    }
-    if (this->name) {
-      ss << " name=" << this->name->toDebugString();
-    }
-    if (this->value) {
-      ss << " value=" << this->value->toDebugString();
-    }
-    ss << "]";
-    return ss.str();
+  void setName(std::shared_ptr<Identifier> name);
+  void setValue(std::shared_ptr<Expression> value);
+  const std::shared_ptr<Identifier> getName();
+  const std::shared_ptr<Expression> getValue();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
   }
-
-  void setName(std::shared_ptr<Identifier> name) { this->name = name; }
-
-  void setValue(std::shared_ptr<Expression> value) { this->value = value; }
-
-  const auto getName() { return this->name; }
-
-  const auto getValue() { return this->value; }
 };
+
+}  // namespace AST

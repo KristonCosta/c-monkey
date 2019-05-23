@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 #include <lexer.hpp>
 #include <parser.hpp>
+#include <print_dispatcher.hpp>
 #include <sstream>
 #include "spdlog/sinks/stdout_color_sinks.h"
 
@@ -28,15 +29,15 @@ let foobar = 838383;)V0G0N";
   REQUIRE(parser->errors().size() == 0);
   REQUIRE(program->size() == 3);
 
-  auto stmt = program->begin();
+  auto stmt = program->getStatements().begin();
 
   for (const std::string &identifier : expectedIdentifiers) {
-    REQUIRE(stmt->get()->literal() == "let");
-    const auto statement = dynamic_cast<LetStatement *>(stmt->get());
+    REQUIRE(stmt->get()->tokenLiteral() == "let");
+    const auto statement = dynamic_cast<AST::LetStatement *>(stmt->get());
     REQUIRE(statement);
     auto name = statement->getName();
     REQUIRE(statement->getName()->getValue() == identifier);
-    REQUIRE(statement->getName()->literal() == identifier);
+    REQUIRE(statement->getName()->tokenLiteral() == identifier);
     std::advance(stmt, 1);
   };
 };
@@ -58,12 +59,12 @@ return 9999999;)V0G0N";
   REQUIRE(parser->errors().size() == 0);
   REQUIRE(program->size() == 3);
 
-  auto stmt = program->begin();
+  auto stmt = program->getStatements().begin();
 
   for (const std::string &identifier : expectedIdentifiers) {
-    const auto statement = dynamic_cast<ReturnStatement *>(stmt->get());
+    const auto statement = dynamic_cast<AST::ReturnStatement *>(stmt->get());
     REQUIRE(statement);
-    REQUIRE(statement->literal() == "return");
+    REQUIRE(statement->tokenLiteral() == "return");
     std::advance(stmt, 1);
   };
 };
@@ -81,14 +82,14 @@ TEST_CASE("Identifier expression statement parsing", "[parser]") {
   REQUIRE(parser->errors().size() == 0);
   REQUIRE(program->size() == 1);
 
-  auto stmt = program->begin();
-  const auto statement = dynamic_cast<ExpressionStatement *>(stmt->get());
+  auto stmt = program->getStatements().begin();
+  const auto statement = dynamic_cast<AST::ExpressionStatement *>(stmt->get());
   REQUIRE(statement);
   const auto expression =
-      dynamic_cast<Identifier *>(statement->getExpression().get());
+      dynamic_cast<AST::Identifier *>(statement->getExpression().get());
   REQUIRE(expression);
   REQUIRE(expression->getValue() == "foobar");
-  REQUIRE(expression->literal() == "foobar");
+  REQUIRE(expression->tokenLiteral() == "foobar");
 };
 
 TEST_CASE("Integer literal expression statement parsing", "[parser]") {
@@ -104,14 +105,14 @@ TEST_CASE("Integer literal expression statement parsing", "[parser]") {
   REQUIRE(parser->errors().size() == 0);
   REQUIRE(program->size() == 1);
 
-  auto stmt = program->begin();
-  const auto statement = dynamic_cast<ExpressionStatement *>(stmt->get());
+  auto stmt = program->getStatements().begin();
+  const auto statement = dynamic_cast<AST::ExpressionStatement *>(stmt->get());
   REQUIRE(statement);
   const auto expression =
-      dynamic_cast<IntegerLiteral *>(statement->getExpression().get());
+      dynamic_cast<AST::IntegerLiteral *>(statement->getExpression().get());
   REQUIRE(expression);
   REQUIRE(expression->getValue() == 5);
-  REQUIRE(expression->literal() == "5");
+  REQUIRE(expression->tokenLiteral() == "5");
 };
 
 TEST_CASE("Prefix operator parsing", "[parser]") {
@@ -132,17 +133,18 @@ TEST_CASE("Prefix operator parsing", "[parser]") {
     REQUIRE(parser->errors().size() == 0);
     REQUIRE(program->size() == 1);
 
-    auto stmt = program->begin();
-    const auto statement = dynamic_cast<ExpressionStatement *>(stmt->get());
+    auto stmt = program->getStatements().begin();
+    const auto statement =
+        dynamic_cast<AST::ExpressionStatement *>(stmt->get());
     REQUIRE(statement);
     const auto expression =
-        dynamic_cast<PrefixExpression *>(statement->getExpression().get());
+        dynamic_cast<AST::PrefixExpression *>(statement->getExpression().get());
     REQUIRE(expression);
     REQUIRE(expression->getOp() == pair.op);
     const auto lit =
-        dynamic_cast<IntegerLiteral *>(expression->getRight().get());
+        dynamic_cast<AST::IntegerLiteral *>(expression->getRight().get());
     REQUIRE(lit->getValue() == pair.val);
-    REQUIRE(lit->literal() == std::to_string(pair.val));
+    REQUIRE(lit->tokenLiteral() == std::to_string(pair.val));
   };
 };
 
@@ -173,7 +175,9 @@ TEST_CASE("Prefix operator precedence parsing", "[parser]") {
     printErrors(errors);
 
     REQUIRE(parser->errors().size() == 0);
-    REQUIRE(program->toString() == pair.expected);
+    std::stringstream ss;
+    ASTPrinter::write([&](std::string message) { ss << message; }, *program);
+    REQUIRE(ss.str() == pair.expected);
   };
 };
 /*
