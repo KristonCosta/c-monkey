@@ -11,12 +11,14 @@ class Node {
  public:
   virtual std::string literal() const = 0;
   virtual std::string toString() const = 0;
+  virtual std::string toDebugString() const = 0;
 };
 
 class Statement : Node {
  public:
   virtual std::string literal() const override { return "base_statement"; };
-  virtual std::string toString() const override {
+  virtual std::string toString() const override { return this->literal(); };
+  virtual std::string toDebugString() const override {
     return fmt::format("[statement literal={}]", this->literal());
   };
 };
@@ -24,7 +26,8 @@ class Statement : Node {
 class Expression : Node {
  public:
   virtual std::string literal() const override { return "base_expression"; };
-  virtual std::string toString() const override {
+  virtual std::string toString() const override { return this->literal(); };
+  virtual std::string toDebugString() const override {
     return fmt::format("[expression literal={}]", this->literal());
   };
 };
@@ -38,8 +41,8 @@ class Identifier : public Expression {
   Identifier(std::shared_ptr<Token> token, std::string value)
       : token(token), value(value) {}
   virtual std::string literal() const override { return token->literal; };
-
-  std::string toString() const override {
+  virtual std::string toString() const override { return this->value; };
+  std::string toDebugString() const override {
     std::stringstream ss;
     ss << "[identifier";
     if (this->token) {
@@ -62,8 +65,8 @@ class IntegerLiteral : public Expression {
       : token(token), value(value) {}
 
   virtual std::string literal() const override { return token->literal; };
-
-  std::string toString() const override {
+  virtual std::string toString() const override { return this->literal(); };
+  std::string toDebugString() const override {
     std::stringstream ss;
     ss << "[integer";
     if (this->token) {
@@ -88,15 +91,19 @@ class PrefixExpression : public Expression {
       : token(token), right(right), op(op) {}
 
   virtual std::string literal() const override { return token->literal; };
-
-  std::string toString() const override {
+  virtual std::string toString() const override {
+    std::stringstream ss;
+    ss << "(" << this->op << this->right->toString() << ")";
+    return ss.str();
+  };
+  std::string toDebugString() const override {
     std::stringstream ss;
     ss << "[prefix";
     if (this->token) {
       ss << " token=" << *this->token;
     }
     if (this->right) {
-      ss << " right=" << this->right->toString();
+      ss << " right=" << this->right->toDebugString();
     }
     ss << " op=" << this->op << "]";
     return ss.str();
@@ -125,12 +132,18 @@ class Program : Node {
   void addStatement(std::shared_ptr<Statement> statement) {
     this->statements.push_back(statement);
   }
-
-  std::string toString() const override {
+  virtual std::string toString() const override {
+    std::stringstream ss;
+    for (const auto& statement : this->statements) {
+      ss << statement->toString();
+    }
+    return ss.str();
+  };
+  std::string toDebugString() const override {
     std::stringstream ss;
     ss << "[program" << std::endl;
-    for (const auto &statement : statements) {
-      ss << statement->toString() << std::endl;
+    for (const auto& statement : statements) {
+      ss << statement->toDebugString() << std::endl;
     }
     ss << "]";
     return ss.str();
@@ -145,11 +158,20 @@ class ReturnStatement : public Statement {
  public:
   ReturnStatement(std::shared_ptr<Token> token) : token(token){};
   virtual std::string literal() const override { return token->literal; };
-  std::string toString() const override {
+  virtual std::string toString() const override {
+    std::stringstream ss;
+    ss << this->literal() << " ";
+    if (this->returnValue) {
+      ss << this->returnValue->toString();
+    }
+    ss << ";";
+    return ss.str();
+  };
+  std::string toDebugString() const override {
     std::stringstream ss;
     ss << "[return token=" << *this->token;
     if (this->returnValue) {
-      ss << " returnValue=" << this->returnValue->toString();
+      ss << " returnValue=" << this->returnValue->toDebugString();
     }
     ss << "]";
     return ss.str();
@@ -168,11 +190,19 @@ class ExpressionStatement : public Statement {
 
   virtual std::string literal() const override { return token->literal; };
 
-  std::string toString() const override {
+  virtual std::string toString() const override {
+    std::stringstream ss;
+    if (this->expression) {
+      ss << this->expression->toString();
+    }
+    return ss.str();
+  };
+
+  std::string toDebugString() const override {
     std::stringstream ss;
     ss << "[expression token=" << *this->token;
     if (this->expression) {
-      ss << " expression=" << this->expression->toString();
+      ss << " expression=" << this->expression->toDebugString();
     }
     ss << "]";
     return ss.str();
@@ -197,15 +227,25 @@ class LetStatement : public Statement {
   virtual std::string literal() const override { return token->literal; };
   virtual std::string toString() const override {
     std::stringstream ss;
+    ss << this->literal() << " ";
+    ss << this->name->toString() << " = ";
+    if (this->value) {
+      ss << this->value->toString();
+    }
+    ss << ";";
+    return ss.str();
+  };
+  virtual std::string toDebugString() const override {
+    std::stringstream ss;
     ss << "[letstatement";
     if (this->token) {
       ss << " token=" << *this->token;
     }
     if (this->name) {
-      ss << " name=" << this->name->toString();
+      ss << " name=" << this->name->toDebugString();
     }
     if (this->value) {
-      ss << " value=" << this->value->toString();
+      ss << " value=" << this->value->toDebugString();
     }
     ss << "]";
     return ss.str();
