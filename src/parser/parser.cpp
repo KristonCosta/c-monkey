@@ -27,9 +27,60 @@ std::shared_ptr<Statement> Parser::parseStatement() {
   switch (this->currentToken->type) {
     case TokenType::LET:
       return this->parseLetStatement();
+    case TokenType::RETURN:
+      return this->parseReturnStatement();
     default:
-      return nullptr;
+      return this->parseExpressionStatement();
   }
+}
+
+std::shared_ptr<Statement> Parser::parseExpressionStatement() {
+  auto tok = this->currentToken;
+  auto stmt = std::make_shared<ExpressionStatement>(
+      tok, this->parseExpression(Precedence::BOTTOM));
+  while (!this->currentTokenIs(TokenType::SEMICOLON)) {
+    this->nextToken();
+  };
+  return std::dynamic_pointer_cast<Statement>(stmt);
+}
+
+std::shared_ptr<Expression> Parser::parseExpression(Precedence) {
+  auto prefixFnPair = this->prefixParseFunctions.find(this->currentToken->type);
+  if (prefixFnPair == this->prefixParseFunctions.end()) {
+    return nullptr;
+  }
+  auto fn = prefixFnPair->second;
+  return (this->*fn)();
+}
+
+std::shared_ptr<Expression> Parser::parseIdentifier() {
+  auto expr = std::make_shared<Identifier>(this->currentToken,
+                                           this->currentToken->literal);
+  return std::dynamic_pointer_cast<Expression>(expr);
+}
+
+std::shared_ptr<Expression> Parser::parseIntegerLiteral() {
+  int value;
+  try {
+    value = std::stoi(this->currentToken->literal);
+  } catch (std::invalid_argument const &e) {
+    this->addError(this->currentToken, "Token value was not an integer");
+    return nullptr;
+  } catch (std::out_of_range const &e) {
+    this->addError(this->currentToken, "Integer value out of range");
+    return nullptr;
+  }
+  auto expr = std::make_shared<IntegerLiteral>(this->currentToken, value);
+  return std::dynamic_pointer_cast<Expression>(expr);
+}
+
+std::shared_ptr<Statement> Parser::parseReturnStatement() {
+  auto stmt = std::make_shared<ReturnStatement>(this->currentToken);
+  this->nextToken();
+  while (!this->currentTokenIs(TokenType::SEMICOLON)) {
+    this->nextToken();
+  };
+  return std::dynamic_pointer_cast<Statement>(stmt);
 }
 
 std::shared_ptr<Statement> Parser::parseLetStatement() {
