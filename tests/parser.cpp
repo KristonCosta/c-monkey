@@ -113,3 +113,35 @@ TEST_CASE("Integer literal expression statement parsing", "[parser]") {
   REQUIRE(expression->getValue() == 5);
   REQUIRE(expression->literal() == "5");
 };
+
+TEST_CASE("Prefix operator parsing", "[parser]") {
+  // spdlog::stdout_color_mt(PARSER_LOGGER);
+  struct testPair {
+    std::string input;
+    std::string op;
+    int val;
+  };
+  testPair pairs[] = {{"!5;", "!", 5}, {"-15;", "-", 15}};
+  for (const auto &pair : pairs) {
+    auto lexer = Lexer::from(pair.input);
+    auto parser = Parser::from(std::move(lexer));
+    auto program = parser->parseProgram();
+    auto errors = parser->errors();
+    printErrors(errors);
+
+    REQUIRE(parser->errors().size() == 0);
+    REQUIRE(program->size() == 1);
+
+    auto stmt = program->begin();
+    const auto statement = dynamic_cast<ExpressionStatement *>(stmt->get());
+    REQUIRE(statement);
+    const auto expression =
+        dynamic_cast<PrefixExpression *>(statement->getExpression().get());
+    REQUIRE(expression);
+    REQUIRE(expression->getOp() == pair.op);
+    const auto lit =
+        dynamic_cast<IntegerLiteral *>(expression->getRight().get());
+    REQUIRE(lit->getValue() == pair.val);
+    REQUIRE(lit->literal() == std::to_string(pair.val));
+  };
+};

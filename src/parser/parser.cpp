@@ -44,13 +44,24 @@ std::shared_ptr<Statement> Parser::parseExpressionStatement() {
   return std::dynamic_pointer_cast<Statement>(stmt);
 }
 
-std::shared_ptr<Expression> Parser::parseExpression(Precedence) {
+std::shared_ptr<Expression> Parser::parseExpression(Precedence prec) {
   auto prefixFnPair = this->prefixParseFunctions.find(this->currentToken->type);
   if (prefixFnPair == this->prefixParseFunctions.end()) {
+    this->addError(this->currentToken,
+                   fmt::format("No prefix expression found for {}",
+                               this->currentToken->literal));
     return nullptr;
   }
   auto fn = prefixFnPair->second;
   return (this->*fn)();
+}
+
+std::shared_ptr<Expression> Parser::parsePrefixExpression() {
+  auto tok = this->currentToken;
+  this->nextToken();
+  auto right = this->parseExpression(Precedence::PREFIX);
+  auto expr = std::make_shared<PrefixExpression>(tok, right, tok->literal);
+  return std::dynamic_pointer_cast<Expression>(expr);
 }
 
 std::shared_ptr<Expression> Parser::parseIdentifier() {

@@ -5,6 +5,8 @@
 #include <string>
 #include <token.hpp>
 
+typedef std::string Operator;
+
 class Node {
  public:
   virtual std::string literal() const = 0;
@@ -72,6 +74,36 @@ class IntegerLiteral : public Expression {
   }
 
   const int getValue() { return this->value; }
+};
+
+class PrefixExpression : public Expression {
+ private:
+  std::shared_ptr<Token> token;
+  std::shared_ptr<Expression> right;
+  Operator op;
+
+ public:
+  PrefixExpression(std::shared_ptr<Token> token,
+                   std::shared_ptr<Expression> right, Operator op)
+      : token(token), right(right), op(op) {}
+
+  virtual std::string literal() const override { return token->literal; };
+
+  std::string toString() const override {
+    std::stringstream ss;
+    ss << "[prefix";
+    if (this->token) {
+      ss << " token=" << *this->token;
+    }
+    if (this->right) {
+      ss << " right=" << this->right->toString();
+    }
+    ss << " op=" << this->op << "]";
+    return ss.str();
+  }
+
+  const std::shared_ptr<Expression> getRight() { return this->right; }
+  const Operator getOp() { return this->op; }
 };
 
 class Program : Node {

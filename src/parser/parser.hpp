@@ -48,6 +48,7 @@ class Parser {
   std::shared_ptr<Expression> parseExpression(Precedence);
   std::shared_ptr<Expression> parseIdentifier();
   std::shared_ptr<Expression> parseIntegerLiteral();
+  std::shared_ptr<Expression> parsePrefixExpression();
 
   void addError(std::shared_ptr<Token> token, std::string message) {
     this->_errors.push_back(std::make_shared<ParserError>(token, message));
@@ -70,6 +71,8 @@ class Parser {
     parser->nextToken();
     parser->registerPrefix(TokenType::IDENT, &Parser::parseIdentifier);
     parser->registerPrefix(TokenType::INTEGER, &Parser::parseIntegerLiteral);
+    parser->registerPrefix(TokenType::BANG, &Parser::parsePrefixExpression);
+    parser->registerPrefix(TokenType::MINUS, &Parser::parsePrefixExpression);
     return std::move(parser);
   }
 
