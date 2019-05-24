@@ -66,14 +66,31 @@ class ASTPrinter : public AST::AbstractDispatcher {
     auto args = node.getArguments();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
       if (arg == node.getArguments().begin()) {
-        ss << arg->get()->getValue();
+        arg->get()->visit(*this);
       } else {
-        ss << ", " << arg->get()->getValue();
+        ss << ", ";
+        arg->get()->visit(*this);
       }
     }
     ss << ") ";
     writer(ss.str());
     node.getBody()->visit(*this);
+  }
+  virtual void dispatch(AST::CallExpression &node) override {
+    node.getName()->visit(*this);
+    writer("(");
+    std::stringstream ss;
+    auto args = node.getArguments();
+    for (auto arg = args.begin(); arg != args.end(); ++arg) {
+      if (arg == node.getArguments().begin()) {
+        arg->get()->visit(*this);
+      } else {
+        ss << ", ";
+        arg->get()->visit(*this);
+      }
+    }
+    ss << ")";
+    writer(ss.str());
   }
   virtual void dispatch(AST::ReturnStatement &node) override {
     writer(node.tokenLiteral());

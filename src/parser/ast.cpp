@@ -191,6 +191,29 @@ std::string FunctionLiteral::toDebugString() const {
   return ss.str();
 };
 
+const std::list<std::shared_ptr<Expression>> &CallExpression::getArguments()
+    const {
+  return this->arguments;
+};
+const uint64_t CallExpression::size() { return this->arguments.size(); };
+void CallExpression::addArgument(std::shared_ptr<Expression> expr) {
+  this->arguments.push_back(expr);
+};
+std::shared_ptr<Expression> CallExpression::getName() { return this->name; };
+std::string CallExpression::tokenLiteral() const {
+  return this->token->literal;
+};
+std::string CallExpression::toDebugString() const {
+  std::stringstream ss;
+  ss << "[call token=" << *this->token
+     << " name=" << this->name->toDebugString() << " arguments=[";
+  for (const auto &arg : arguments) {
+    ss << arg->toDebugString() << ", ";
+  }
+  ss << "]";
+  return ss.str();
+};
+
 /*
 
   Statement Types

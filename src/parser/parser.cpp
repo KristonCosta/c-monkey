@@ -10,7 +10,8 @@ std::map<TokenType, Precedence> precedences = {
     {TokenType::PLUS, Precedence::SUM},
     {TokenType::MINUS, Precedence::SUM},
     {TokenType::SLASH, Precedence::PRODUCT},
-    {TokenType::ASTERISK, Precedence::PRODUCT}};
+    {TokenType::ASTERISK, Precedence::PRODUCT},
+    {TokenType::LPAREN, Precedence::CALL}};
 
 std::string precedenceToString(Precedence prec) {
   switch (prec) {
@@ -216,6 +217,8 @@ std::shared_ptr<AST::Expression> Parser::parseIfExpression() {
 }
 
 std::shared_ptr<AST::Expression> Parser::parseFunctionLiteral() {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing function literal for {} ", *this->currentToken);
   auto tok = this->currentToken;
   if (!this->expectPeek(TokenType::LPAREN)) {
     return nullptr;
@@ -264,6 +267,23 @@ std::shared_ptr<AST::Statement> Parser::parseBlockStatement() {
     this->nextToken();
   }
   return block;
+}
+
+std::shared_ptr<AST::Expression> Parser::parseCallExpression(
+    std::shared_ptr<AST::Expression> func) {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing call expression for {} ", *this->currentToken);
+  auto tok = this->currentToken;
+  std::list<std::shared_ptr<AST::Expression>> args;
+  auto foundParams = this->parseCallArguments(std::back_inserter(args));
+  if (!foundParams) {
+    return nullptr;
+  }
+  auto fn = std::make_shared<AST::CallExpression>(tok, func);
+  for (auto arg : args) {
+    fn->addArgument(arg);
+  };
+  return fn;
 }
 
 std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {

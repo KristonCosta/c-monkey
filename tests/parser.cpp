@@ -9,7 +9,6 @@
 
 TEST_CASE("Let statement parsing", "[parser]") {
   // spdlog::stdout_color_mt(PARSER_LOGGER);
-
   std::string input =
       R"V0G0N(let x = 5;
 let y = 10;
@@ -176,6 +175,27 @@ TEST_CASE("Function literal parsing", "[parser]") {
   const auto infx = testInfixExpression(expr->getExpression(), "+");
   testIdentifier(infx->getLeft(), "x");
   testIdentifier(infx->getRight(), "y");
+}
+
+TEST_CASE("Call expression testing", "[parser]") {
+  auto input = "add(1, 2 * 3, 4 + 5);";
+  auto program = testParserWithInput(input);
+  REQUIRE(program->size() == 1);
+  const auto statement =
+      testExpressionStatement(program->getStatements().begin()->get());
+  const auto call = testCallExpression(statement->getExpression(), "add");
+  REQUIRE(call->getArguments().size() == 3);
+  auto itr = call->getArguments().begin();
+  testIntegerLiteral(itr->get(), "1", 1);
+  itr++;
+
+  const auto expr1 = testInfixExpression(itr->get(), "*");
+  testIntegerLiteral(expr1->getLeft(), "2", 2);
+  testIntegerLiteral(expr1->getRight(), "3", 3);
+  itr++;
+  const auto expr2 = testInfixExpression(itr->get(), "+");
+  testIntegerLiteral(expr2->getLeft(), "4", 4);
+  testIntegerLiteral(expr2->getRight(), "5", 5);
 }
 /*
 future

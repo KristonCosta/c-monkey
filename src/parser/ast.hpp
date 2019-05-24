@@ -20,6 +20,7 @@ class Boolean;
 class PrefixExpression;
 class InfixExpression;
 class IfExpression;
+class CallExpression;
 
 class ReturnStatement;
 class ExpressionStatement;
@@ -42,6 +43,7 @@ class AbstractDispatcher {
   virtual void dispatch(InfixExpression &node) = 0;
   virtual void dispatch(IfExpression &node) = 0;
   virtual void dispatch(FunctionLiteral &node) = 0;
+  virtual void dispatch(CallExpression &node) = 0;
 
   virtual void dispatch(ReturnStatement &node) = 0;
   virtual void dispatch(ExpressionStatement &node) = 0;
@@ -246,6 +248,25 @@ class FunctionLiteral : public Expression {
   const uint64_t size();
   void addArgument(std::shared_ptr<Identifier> identifier);
   std::shared_ptr<BlockStatement> &getBody();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+class CallExpression : public Expression {
+  std::shared_ptr<Token> token;
+  std::shared_ptr<Expression> name;
+  std::list<std::shared_ptr<Expression>> arguments;
+
+ public:
+  CallExpression(std::shared_ptr<Token> token, std::shared_ptr<Expression> name)
+      : token(token), name(name){};
+  const std::list<std::shared_ptr<Expression>> &getArguments() const;
+  const uint64_t size();
+  void addArgument(std::shared_ptr<Expression> expr);
+  std::shared_ptr<Expression> getName();
   virtual std::string tokenLiteral() const override;
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {

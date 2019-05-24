@@ -59,10 +59,12 @@ class Parser {
   std::shared_ptr<AST::Expression> parseGroupedExpression();
   std::shared_ptr<AST::Expression> parseIfExpression();
   std::shared_ptr<AST::Expression> parseFunctionLiteral();
+  std::shared_ptr<AST::Expression> parseCallExpression(
+      std::shared_ptr<AST::Expression> func);
 
   template <typename OutputIterator>
   bool parseFunctionParameters(OutputIterator out) {
-    if (this->peekTokenIs(TokenType::COMMA)) {
+    if (this->peekTokenIs(TokenType::RPAREN)) {
       return true;
     }
     this->nextToken();
@@ -74,6 +76,26 @@ class Parser {
       this->nextToken();
       *(out++) = (std::make_shared<AST::Identifier>(
           this->currentToken, this->currentToken->literal));
+    }
+    if (!this->expectPeek(TokenType::RPAREN)) {
+      return false;
+    }
+    return true;
+  }
+
+  template <typename OutputIterator>
+  bool parseCallArguments(OutputIterator out) {
+    if (this->peekTokenIs(TokenType::COMMA)) {
+      return true;
+    }
+    this->nextToken();
+
+    *(out++) = this->parseExpression(Precedence::BOTTOM);
+
+    while (this->peekTokenIs(TokenType::COMMA)) {
+      this->nextToken();
+      this->nextToken();
+      *(out++) = this->parseExpression(Precedence::BOTTOM);
     }
     if (!this->expectPeek(TokenType::RPAREN)) {
       return false;
@@ -119,6 +141,7 @@ class Parser {
     parser->registerInfix(TokenType::NE, &Parser::parseInfixExpression);
     parser->registerInfix(TokenType::LT, &Parser::parseInfixExpression);
     parser->registerInfix(TokenType::GT, &Parser::parseInfixExpression);
+    parser->registerInfix(TokenType::LPAREN, &Parser::parseCallExpression);
     return std::move(parser);
   }
 

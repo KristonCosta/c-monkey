@@ -122,6 +122,21 @@ AST::InfixExpression *testInfixExpression(std::shared_ptr<AST::Expression> node,
   return expression;
 }
 
+AST::CallExpression *testCallExpression(AST::Expression *node,
+                                        std::string name) {
+  const auto expression = dynamic_cast<AST::CallExpression *>(node);
+  REQUIRE(expression);
+  return expression;
+}
+
+AST::CallExpression *testCallExpression(std::shared_ptr<AST::Expression> node,
+                                        std::string name) {
+  const auto expression = dynamic_cast<AST::CallExpression *>(node.get());
+  REQUIRE(expression);
+  testIdentifier(expression->getName(), name);
+  return expression;
+}
+
 AST::PrefixExpression *testPrefixExpression(
     std::shared_ptr<AST::Expression> node, std::string op) {
   const auto expression = dynamic_cast<AST::PrefixExpression *>(node.get());
