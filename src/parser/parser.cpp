@@ -64,6 +64,9 @@ std::unique_ptr<AST::Program> Parser::parseProgram() {
       spdlog::get(PARSER_LOGGER)
           ->info("Adding statement {}", stmt->toDebugString());
       program->addStatement(stmt);
+    } else {
+      spdlog::get(PARSER_LOGGER)
+          ->info("Null statement found for {}", this->currentToken);
     }
     this->nextToken();
   };
@@ -88,7 +91,7 @@ std::shared_ptr<AST::Statement> Parser::parseExpressionStatement() {
   if (this->peekTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   };
-  return std::dynamic_pointer_cast<AST::Statement>(stmt);
+  return stmt;
 }
 
 std::shared_ptr<AST::Expression> Parser::parseExpression(Precedence prec) {
@@ -96,9 +99,10 @@ std::shared_ptr<AST::Expression> Parser::parseExpression(Precedence prec) {
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing expression {}", *this->currentToken);
   if (prefixFnPair == this->prefixParseFunctions.end()) {
-    this->addError(this->currentToken,
-                   fmt::format("No prefix expression found for {}",
-                               this->currentToken->literal));
+    auto msg = fmt::format("No prefix expression found for {}",
+                           this->currentToken->literal);
+    spdlog::get(PARSER_LOGGER)->warn(msg);
+    this->addError(this->currentToken, msg);
     return nullptr;
   }
   auto fn = prefixFnPair->second;
@@ -123,12 +127,18 @@ std::shared_ptr<AST::Expression> Parser::parseExpression(Precedence prec) {
   return left;
 }
 
+std::shared_ptr<AST::Expression> Parser::parseBoolean() {
+  return std::make_shared<AST::Boolean>(this->currentToken,
+                                        this->currentTokenIs(TokenType::TRUE));
+}
+
 std::shared_ptr<AST::Expression> Parser::parsePrefixExpression() {
   auto tok = this->currentToken;
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing prefix for {} ", *this->currentToken);
   this->nextToken();
   auto right = this->parseExpression(Precedence::PREFIX);
-  auto expr = std::make_shared<AST::PrefixExpression>(tok, right, tok->literal);
-  return std::dynamic_pointer_cast<AST::Expression>(expr);
+  return std::make_shared<AST::PrefixExpression>(tok, right, tok->literal);
 }
 
 std::shared_ptr<AST::Expression> Parser::parseInfixExpression(
@@ -142,14 +152,14 @@ std::shared_ptr<AST::Expression> Parser::parseInfixExpression(
   auto right = this->parseExpression(prec);
   auto expr =
       std::make_shared<AST::InfixExpression>(tok, left, right, tok->literal);
-  spdlog::get(PARSER_LOGGER)->info("Returning infix for {}", *tok);
-  return std::dynamic_pointer_cast<AST::Expression>(expr);
+  spdlog::get(PARSER_LOGGER)
+      ->info("Returning infix expression {}", expr->toDebugString());
+  return expr;
 }
 
 std::shared_ptr<AST::Expression> Parser::parseIdentifier() {
-  auto expr = std::make_shared<AST::Identifier>(this->currentToken,
-                                                this->currentToken->literal);
-  return std::dynamic_pointer_cast<AST::Expression>(expr);
+  return std::make_shared<AST::Identifier>(this->currentToken,
+                                           this->currentToken->literal);
 }
 
 std::shared_ptr<AST::Expression> Parser::parseIntegerLiteral() {
@@ -163,8 +173,18 @@ std::shared_ptr<AST::Expression> Parser::parseIntegerLiteral() {
     this->addError(this->currentToken, "Integer value out of range");
     return nullptr;
   }
-  auto expr = std::make_shared<AST::IntegerLiteral>(this->currentToken, value);
-  return std::dynamic_pointer_cast<AST::Expression>(expr);
+  return std::make_shared<AST::IntegerLiteral>(this->currentToken, value);
+}
+
+std::shared_ptr<AST::Expression> Parser::parseGroupedExpression() {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing grouped expression for {} ", *this->currentToken);
+  this->nextToken();
+  auto expr = this->parseExpression(Precedence::BOTTOM);
+  if (!this->expectPeek(TokenType::RPAREN)) {
+    return nullptr;
+  }
+  return expr;
 }
 
 std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
@@ -173,7 +193,7 @@ std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
   while (!this->currentTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   };
-  return std::dynamic_pointer_cast<AST::Statement>(stmt);
+  return stmt;
 }
 
 std::shared_ptr<AST::Statement> Parser::parseLetStatement() {
@@ -194,7 +214,7 @@ std::shared_ptr<AST::Statement> Parser::parseLetStatement() {
   while (!this->currentTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   }
-  return std::dynamic_pointer_cast<AST::Statement>(stmt);
+  return stmt;
 }
 
 bool Parser::currentTokenIs(TokenType type) const {
@@ -208,12 +228,10 @@ bool Parser::expectPeek(TokenType type) {
     this->nextToken();
     return true;
   } else {
-    std::cout << "Adding error" << std::endl;
     this->addError(
         this->peekToken,
         fmt::format("Expected {} but found {}", tokenTypeToString(type),
                     tokenTypeToString(this->peekToken->type)));
-    std::cout << "Added error" << std::endl;
     return false;
   }
 }

@@ -81,6 +81,14 @@ std::string IntegerLiteral::toDebugString() const {
   return ss.str();
 };
 
+const bool Boolean::getValue() { return this->value; };
+std::string Boolean::tokenLiteral() const { return this->token->literal; };
+std::string Boolean::toDebugString() const {
+  std::stringstream ss;
+  ss << "[bool value=" << this->value << "]";
+  return ss.str();
+};
+
 /*
 
   Expression Types - operators
@@ -123,8 +131,11 @@ std::string InfixExpression::tokenLiteral() const { return token->literal; };
 std::string InfixExpression::toDebugString() const {
   std::stringstream ss;
   ss << "[infix"
-     << " token=" << *this->token << " left=" << this->left->toDebugString()
-     << " right=" << this->right->toDebugString() << " op=" << this->op << "]";
+     << " token=" << *this->token << " left=" << this->left->toDebugString();
+  if (this->right) {
+    ss << " right=" << this->right->toDebugString();
+  }
+  ss << " op=" << this->op << "]";
   return ss.str();
 };
 

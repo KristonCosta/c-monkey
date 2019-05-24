@@ -27,6 +27,9 @@ class ASTPrinter : public AST::AbstractDispatcher {
   virtual void dispatch(AST::Identifier &node) override {
     writer(node.getValue());
   };
+  virtual void dispatch(AST::Boolean &node) override {
+    writer(node.tokenLiteral());
+  };
   virtual void dispatch(AST::IntegerLiteral &node) override {
     writer(node.tokenLiteral());
   };
@@ -42,7 +45,9 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer(" ");
     writer(node.getOp());
     writer(" ");
-    node.getRight()->visit(*this);
+    if (node.getRight()) {
+      node.getRight()->visit(*this);
+    }
     writer(")");
   };
   virtual void dispatch(AST::ReturnStatement &node) override {
