@@ -2,6 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <iostream>
 #include <lexer.hpp>
+#include <parser.hpp>
 #include <random>
 #include <repl.hpp>
 
@@ -16,6 +17,7 @@ int main() {
   auto suffix = dist(mt);
   spdlog::info("Creating log files with suffix: {}", suffix);
   registerLogger(LEXER_LOGGER, suffix);
+  registerLogger(PARSER_LOGGER, suffix);
 
   Repl::run();
 }
