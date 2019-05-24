@@ -1,5 +1,6 @@
 #include <spdlog/spdlog.h>
 #include <catch2/catch.hpp>
+#include <iostream>
 #include <lexer.hpp>
 #include <parser.hpp>
 #include <print_dispatcher.hpp>
@@ -26,6 +27,20 @@ let foobar = 838383;)V0G0N";
   };
 };
 
+TEST_CASE("Let statement with expression", "[parser]") {
+  std::string input = "let x = 5 + 50;\nlet y = true;";
+  auto program = testParserWithInput(input);
+  REQUIRE(program->size() == 2);
+  auto stmt = program->getStatements().begin();
+  const auto let1 = testLetStatement(stmt->get(), "x");
+  const auto infix = testInfixExpression(let1->getValue(), "+");
+  testIntegerLiteral(infix->getLeft(), "5", 5);
+  testIntegerLiteral(infix->getRight(), "50", 50);
+  stmt++;
+  const auto let2 = testLetStatement(stmt->get(), "y");
+  testBoolean(let2->getValue(), true);
+};
+
 TEST_CASE("Return statement parsing", "[parser]") {
   std::string input =
       R"V0G0N(return 5;
@@ -41,6 +56,24 @@ return 9999999;)V0G0N";
     testReturnStatement(stmt->get());
     std::advance(stmt, 1);
   };
+};
+
+TEST_CASE("Return statement with expression", "[parser]") {
+  std::string input = "return 6 + 7;\nreturn add(1,2);";
+  auto program = testParserWithInput(input);
+  REQUIRE(program->size() == 2);
+  auto stmt = program->getStatements().begin();
+  const auto ret1 = testReturnStatement(stmt->get());
+  const auto infix = testInfixExpression(ret1->getReturnValue(), "+");
+  testIntegerLiteral(infix->getLeft(), "6", 6);
+  testIntegerLiteral(infix->getRight(), "7", 7);
+  stmt++;
+  const auto ret2 = testReturnStatement(stmt->get());
+  const auto call = testCallExpression(ret2->getReturnValue(), "add");
+  auto callArgs = call->getArguments().begin();
+  testIntegerLiteral(callArgs->get(), "1", 1);
+  callArgs++;
+  testIntegerLiteral(callArgs->get(), "2", 2);
 };
 
 TEST_CASE("Identifier expression statement parsing", "[parser]") {
@@ -85,6 +118,7 @@ TEST_CASE("Prefix operator parsing", "[parser]") {
 };
 
 TEST_CASE("Prefix operator precedence parsing", "[parser]") {
+  // spdlog::stdout_color_mt(PARSER_LOGGER);
   struct testPair {
     std::string input;
     std::string expected;
@@ -111,6 +145,11 @@ TEST_CASE("Prefix operator precedence parsing", "[parser]") {
       {"2 / (5 + 5)", "(2 / (5 + 5))"},
       {"-(5 + 5)", "(-(5 + 5))"},
       {"!(true == true)", "(!(true == true))"},
+      {"a + add(b * c) + d", "((a + add((b * c))) + d)"},
+      {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+       "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
+      {"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"},
+
   };
   for (const auto &pair : pairs) {
     auto program = testParserWithInput(pair.input);
@@ -199,13 +238,9 @@ TEST_CASE("Call expression testing", "[parser]") {
 }
 /*
 future
-
-
-      {"a + add(b * c) + d", "((a + add((b * c))) + d)"},
-      {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
-       "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
-      {"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"},
       {"a * [1, 2, 3, 4][b * c] * d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"},
       {"add(a * b[2], b[1], 2 * [1, 2][1])",
        "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"},
+
+
        */

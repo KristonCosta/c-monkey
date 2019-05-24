@@ -289,8 +289,10 @@ std::shared_ptr<AST::Expression> Parser::parseCallExpression(
 std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing return statement for {} ", *this->currentToken);
-  auto stmt = std::make_shared<AST::ReturnStatement>(this->currentToken);
+  auto tok = this->currentToken;
   this->nextToken();
+  auto ret = this->parseExpression(Precedence::BOTTOM);
+  auto stmt = std::make_shared<AST::ReturnStatement>(tok, ret);
   while (!this->currentTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   };
@@ -300,19 +302,21 @@ std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
 std::shared_ptr<AST::Statement> Parser::parseLetStatement() {
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing let statement for {} ", *this->currentToken);
-  auto stmt = std::make_shared<AST::LetStatement>(this->currentToken);
+  auto tok = this->currentToken;
   if (!this->expectPeek(TokenType::IDENT)) {
     return nullptr;
   }
-  stmt->setName(std::make_shared<AST::Identifier>(this->currentToken,
-                                                  this->currentToken->literal));
+  auto name = std::make_shared<AST::Identifier>(this->currentToken,
+                                                this->currentToken->literal);
   if (!this->expectPeek(TokenType::ASSIGN)) {
     return nullptr;
   }
+  this->nextToken();
+  auto val = this->parseExpression(Precedence::BOTTOM);
   while (!this->currentTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   }
-  return stmt;
+  return std::make_shared<AST::LetStatement>(tok, name, val);
 }
 
 bool Parser::currentTokenIs(TokenType type) const {

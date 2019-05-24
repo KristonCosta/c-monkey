@@ -285,7 +285,9 @@ class ReturnStatement : public Statement {
   std::shared_ptr<Expression> returnValue;
 
  public:
-  ReturnStatement(std::shared_ptr<Token> token) : token(token){};
+  ReturnStatement(std::shared_ptr<Token> token,
+                  std::shared_ptr<Expression> returnValue)
+      : token(token), returnValue(returnValue){};
   std::shared_ptr<Expression> getReturnValue() const;
   virtual std::string tokenLiteral() const override;
   virtual std::string toDebugString() const override;
@@ -319,15 +321,10 @@ class LetStatement : public Statement {
   std::shared_ptr<Expression> value;
 
  public:
-  LetStatement(std::shared_ptr<Token> token)
-      : token(token), name(nullptr), value(nullptr){};
-
   LetStatement(std::shared_ptr<Token> token, std::shared_ptr<Identifier> name,
                std::shared_ptr<Expression> value)
       : token(token), name(name), value(value){};
 
-  void setName(std::shared_ptr<Identifier> name);
-  void setValue(std::shared_ptr<Expression> value);
   const std::shared_ptr<Identifier> getName();
   const std::shared_ptr<Expression> getValue();
   virtual std::string tokenLiteral() const override;

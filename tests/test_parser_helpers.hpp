@@ -64,6 +64,20 @@ AST::ExpressionStatement *testExpressionStatement(AST::Statement *node) {
   return statement;
 }
 
+AST::Boolean *testBoolean(std::shared_ptr<AST::Expression> node, bool expect) {
+  const auto statement = dynamic_cast<AST::Boolean *>(node.get());
+  REQUIRE(statement);
+  REQUIRE(statement->getValue() == expect);
+  return statement;
+}
+
+AST::Boolean *testBoolean(AST::Expression *node, bool expect) {
+  const auto statement = dynamic_cast<AST::Boolean *>(node);
+  REQUIRE(statement);
+  REQUIRE(statement->getValue() == expect);
+  return statement;
+}
+
 AST::IfExpression *testIfExpression(std::shared_ptr<AST::Expression> node) {
   const auto statement = dynamic_cast<AST::IfExpression *>(node.get());
   REQUIRE(statement);

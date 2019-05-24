@@ -254,14 +254,6 @@ std::string ExpressionStatement::toDebugString() const {
   return ss.str();
 };
 
-void LetStatement::setName(std::shared_ptr<Identifier> name) {
-  this->name = name;
-};
-
-void LetStatement::setValue(std::shared_ptr<Expression> value) {
-  this->value = value;
-};
-
 const std::shared_ptr<Identifier> LetStatement::getName() {
   return this->name;
 };
