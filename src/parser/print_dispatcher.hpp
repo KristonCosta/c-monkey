@@ -50,6 +50,16 @@ class ASTPrinter : public AST::AbstractDispatcher {
     }
     writer(")");
   };
+  virtual void dispatch(AST::IfExpression &node) override {
+    writer("if ");
+    node.getCondition()->visit(*this);
+    writer(" ");
+    node.getWhenTrue()->visit(*this);
+    if (node.getWhenFalse()) {
+      writer("else ");
+      node.getWhenFalse()->visit(*this);
+    }
+  };
   virtual void dispatch(AST::ReturnStatement &node) override {
     writer(node.tokenLiteral());
     if (node.getReturnValue()) {
@@ -69,6 +79,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
     node.getValue()->visit(*this);
     writer(";");
   };
+  virtual void dispatch(AST::BlockStatement &node) override{};
 
  public:
   static void write(WriterFn writer, AST::Node &n) {

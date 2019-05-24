@@ -5,12 +5,7 @@
 #include <print_dispatcher.hpp>
 #include <sstream>
 #include "spdlog/sinks/stdout_color_sinks.h"
-
-void printErrors(const std::list<std::shared_ptr<ParserError>> errors) {
-  for (const auto &error : errors) {
-    WARN(fmt::format("{}", *error));
-  }
-}
+#include "test_parser_helpers.hpp"
 
 TEST_CASE("Let statement parsing", "[parser]") {
   // spdlog::stdout_color_mt(PARSER_LOGGER);
@@ -20,103 +15,56 @@ TEST_CASE("Let statement parsing", "[parser]") {
 let y = 10;
 let foobar = 838383;)V0G0N";
   std::string expectedIdentifiers[] = {"x", "y", "foobar"};
-  auto lexer = Lexer::from(input);
-  auto parser = Parser::from(std::move(lexer));
-  auto program = parser->parseProgram();
-  auto errors = parser->errors();
-  printErrors(errors);
 
-  REQUIRE(parser->errors().size() == 0);
+  auto program = testParserWithInput(input);
   REQUIRE(program->size() == 3);
 
   auto stmt = program->getStatements().begin();
 
   for (const std::string &identifier : expectedIdentifiers) {
-    REQUIRE(stmt->get()->tokenLiteral() == "let");
-    const auto statement = dynamic_cast<AST::LetStatement *>(stmt->get());
-    REQUIRE(statement);
-    auto name = statement->getName();
-    REQUIRE(statement->getName()->getValue() == identifier);
-    REQUIRE(statement->getName()->tokenLiteral() == identifier);
+    testLetStatement(stmt->get(), identifier);
     std::advance(stmt, 1);
   };
 };
 
 TEST_CASE("Return statement parsing", "[parser]") {
-  // spdlog::stdout_color_mt(PARSER_LOGGER);
-
   std::string input =
       R"V0G0N(return 5;
 return 10;
 return 9999999;)V0G0N";
   std::string expectedIdentifiers[] = {"x", "y", "foobar"};
-  auto lexer = Lexer::from(input);
-  auto parser = Parser::from(std::move(lexer));
-  auto program = parser->parseProgram();
-  auto errors = parser->errors();
-  printErrors(errors);
-
-  REQUIRE(parser->errors().size() == 0);
+  auto program = testParserWithInput(input);
   REQUIRE(program->size() == 3);
 
   auto stmt = program->getStatements().begin();
 
   for (const std::string &identifier : expectedIdentifiers) {
-    const auto statement = dynamic_cast<AST::ReturnStatement *>(stmt->get());
-    REQUIRE(statement);
-    REQUIRE(statement->tokenLiteral() == "return");
+    testReturnStatement(stmt->get());
     std::advance(stmt, 1);
   };
 };
 
 TEST_CASE("Identifier expression statement parsing", "[parser]") {
-  // spdlog::stdout_color_mt(PARSER_LOGGER);
-
   std::string input = R"V0G0N(foobar;)V0G0N";
-  auto lexer = Lexer::from(input);
-  auto parser = Parser::from(std::move(lexer));
-  auto program = parser->parseProgram();
-  auto errors = parser->errors();
-  printErrors(errors);
-
-  REQUIRE(parser->errors().size() == 0);
+  auto program = testParserWithInput(input);
   REQUIRE(program->size() == 1);
 
   auto stmt = program->getStatements().begin();
-  const auto statement = dynamic_cast<AST::ExpressionStatement *>(stmt->get());
-  REQUIRE(statement);
-  const auto expression =
-      dynamic_cast<AST::Identifier *>(statement->getExpression().get());
-  REQUIRE(expression);
-  REQUIRE(expression->getValue() == "foobar");
-  REQUIRE(expression->tokenLiteral() == "foobar");
+  const auto statement = testExpressionStatement(stmt->get());
+  testIdentifier(statement->getExpression(), "foobar");
 };
 
 TEST_CASE("Integer literal expression statement parsing", "[parser]") {
-  // spdlog::stdout_color_mt(PARSER_LOGGER);
-
   std::string input = R"V0G0N(5;)V0G0N";
-  auto lexer = Lexer::from(input);
-  auto parser = Parser::from(std::move(lexer));
-  auto program = parser->parseProgram();
-  auto errors = parser->errors();
-  printErrors(errors);
-
-  REQUIRE(parser->errors().size() == 0);
+  auto program = testParserWithInput(input);
   REQUIRE(program->size() == 1);
 
   auto stmt = program->getStatements().begin();
-  const auto statement = dynamic_cast<AST::ExpressionStatement *>(stmt->get());
-  REQUIRE(statement);
-  const auto expression =
-      dynamic_cast<AST::IntegerLiteral *>(statement->getExpression().get());
-  REQUIRE(expression);
-  REQUIRE(expression->getValue() == 5);
-  REQUIRE(expression->tokenLiteral() == "5");
+  const auto statement = testExpressionStatement(stmt->get());
+  testIntegerLiteral(statement->getExpression(), "5", 5);
 };
 
 TEST_CASE("Prefix operator parsing", "[parser]") {
-  // spdlog::stdout_color_mt(PARSER_LOGGER);
   struct testPair {
     std::string input;
     std::string op;
@@ -124,27 +72,16 @@ TEST_CASE("Prefix operator parsing", "[parser]") {
   };
   testPair pairs[] = {{"!5;", "!", 5}, {"-15;", "-", 15}};
   for (const auto &pair : pairs) {
-    auto lexer = Lexer::from(pair.input);
-    auto parser = Parser::from(std::move(lexer));
-    auto program = parser->parseProgram();
-    auto errors = parser->errors();
-    printErrors(errors);
-
-    REQUIRE(parser->errors().size() == 0);
+    auto program = testParserWithInput(pair.input);
     REQUIRE(program->size() == 1);
 
     auto stmt = program->getStatements().begin();
-    const auto statement =
-        dynamic_cast<AST::ExpressionStatement *>(stmt->get());
-    REQUIRE(statement);
+
+    const auto statement = testExpressionStatement(stmt->get());
     const auto expression =
-        dynamic_cast<AST::PrefixExpression *>(statement->getExpression().get());
-    REQUIRE(expression);
-    REQUIRE(expression->getOp() == pair.op);
-    const auto lit =
-        dynamic_cast<AST::IntegerLiteral *>(expression->getRight().get());
-    REQUIRE(lit->getValue() == pair.val);
-    REQUIRE(lit->tokenLiteral() == std::to_string(pair.val));
+        testPrefixExpression(statement->getExpression(), pair.op);
+    testIntegerLiteral(expression->getRight(), std::to_string(pair.val),
+                       pair.val);
   };
 };
 
@@ -177,18 +114,49 @@ TEST_CASE("Prefix operator precedence parsing", "[parser]") {
       {"!(true == true)", "(!(true == true))"},
   };
   for (const auto &pair : pairs) {
-    auto lexer = Lexer::from(pair.input);
-    auto parser = Parser::from(std::move(lexer));
-    auto program = parser->parseProgram();
-    auto errors = parser->errors();
-    printErrors(errors);
-
-    REQUIRE(parser->errors().size() == 0);
+    auto program = testParserWithInput(pair.input);
     std::stringstream ss;
     ASTPrinter::write([&](std::string message) { ss << message; }, *program);
     REQUIRE(ss.str() == pair.expected);
   };
 };
+
+TEST_CASE("If expression parsing", "[parser]") {
+  auto input = "if (x < y) { x }";
+  auto program = testParserWithInput(input);
+
+  REQUIRE(program->size() == 1);
+  auto stmt = program->getStatements().begin();
+  const auto statement = testExpressionStatement(stmt->get());
+  const auto expression = testIfExpression(statement->getExpression());
+  const auto condition = testInfixExpression(expression->getCondition(), "<");
+  testIdentifier(condition->getLeft(), "x");
+  testIdentifier(condition->getRight(), "y");
+  auto block = expression->getWhenTrue()->getStatements().begin()->get();
+  testIdentifier(testExpressionStatement(block)->getExpression(), "x");
+}
+
+TEST_CASE("If else expression parsing", "[parser]") {
+  auto input = "if (x > y) { w } else { z; q }";
+  auto program = testParserWithInput(input);
+
+  REQUIRE(program->size() == 1);
+  auto stmt = program->getStatements().begin();
+  const auto statement = testExpressionStatement(stmt->get());
+  const auto expression = testIfExpression(statement->getExpression());
+  const auto condition = testInfixExpression(expression->getCondition(), ">");
+  testIdentifier(condition->getLeft(), "x");
+  testIdentifier(condition->getRight(), "y");
+  auto tblockstatements = expression->getWhenTrue()->getStatements();
+  testIdentifier(
+      testExpressionStatement(tblockstatements.begin()->get())->getExpression(),
+      "w");
+  auto fblockstatements = expression->getWhenFalse()->getStatements();
+  REQUIRE(fblockstatements.size() == 2);
+  auto itr = fblockstatements.begin();
+  std::advance(itr, 1);
+  testIdentifier(testExpressionStatement(itr->get())->getExpression(), "q");
+}
 /*
 future
 

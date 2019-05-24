@@ -20,7 +20,7 @@ std::string Expression::toDebugString() const {
 
 */
 
-const std::list<std::shared_ptr<Statement>>& Program::getStatements() const {
+const std::list<std::shared_ptr<Statement>> &Program::getStatements() const {
   return this->statements;
 }
 
@@ -40,7 +40,7 @@ std::string Program::tokenLiteral() const {
 std::string Program::toDebugString() const {
   std::stringstream ss;
   ss << "[program" << std::endl;
-  for (const auto& statement : statements) {
+  for (const auto &statement : statements) {
     ss << statement->toDebugString() << std::endl;
   }
   ss << "]";
@@ -141,6 +141,36 @@ std::string InfixExpression::toDebugString() const {
 
 /*
 
+  Expression Types - complex
+
+*/
+
+std::shared_ptr<Expression> &IfExpression::getCondition() {
+  return this->condition;
+};
+std::shared_ptr<BlockStatement> &IfExpression::getWhenTrue() {
+  return this->whenTrue;
+};
+std::shared_ptr<BlockStatement> &IfExpression::getWhenFalse() {
+  return this->whenFalse;
+};
+std::string IfExpression::tokenLiteral() const { return this->token->literal; };
+std::string IfExpression::toDebugString() const {
+  std::stringstream ss;
+  ss << "[if token=" << *this->token
+     << " condition=" << this->condition->toDebugString()
+     << " whenTrue=" << this->whenTrue->toDebugString();
+  if (this->whenFalse) {
+    ss << " whenFalse=" << this->whenFalse->toDebugString();
+  }
+  ss << "]";
+  return ss.str();
+};
+
+;
+
+/*
+
   Statement Types
 
 */
@@ -209,6 +239,31 @@ std::string LetStatement::toDebugString() const {
   if (this->value) {
     ss << " value=" << this->value->toDebugString();
   }
+  ss << "]";
+  return ss.str();
+};
+
+const std::list<std::shared_ptr<Statement>> &BlockStatement::getStatements()
+    const {
+  return this->statements;
+};
+
+const uint64_t BlockStatement::size() { return this->statements.size(); };
+
+void BlockStatement::addStatement(std::shared_ptr<Statement> statement) {
+  this->statements.push_back(statement);
+};
+
+std::string BlockStatement::tokenLiteral() const {
+  return this->token->literal;
+};
+
+std::string BlockStatement::toDebugString() const {
+  std::stringstream ss;
+  ss << "[block statements=[";
+  for (const auto &statement : statements) {
+    ss << statement->toDebugString() << ", ";
+  };
   ss << "]";
   return ss.str();
 };

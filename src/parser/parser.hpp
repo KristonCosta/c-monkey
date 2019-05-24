@@ -44,6 +44,7 @@ class Parser {
   std::shared_ptr<AST::Statement> parseLetStatement();
   std::shared_ptr<AST::Statement> parseReturnStatement();
   std::shared_ptr<AST::Statement> parseExpressionStatement();
+  std::shared_ptr<AST::Statement> parseBlockStatement();
 
   std::shared_ptr<AST::Expression> parseExpression(Precedence);
   std::shared_ptr<AST::Expression> parseIdentifier();
@@ -53,6 +54,7 @@ class Parser {
   std::shared_ptr<AST::Expression> parseInfixExpression(
       std::shared_ptr<AST::Expression>);
   std::shared_ptr<AST::Expression> parseGroupedExpression();
+  std::shared_ptr<AST::Expression> parseIfExpression();
 
   Precedence peekPrecedence();
   Precedence currentPrecedence();
@@ -85,6 +87,7 @@ class Parser {
     parser->registerPrefix(TokenType::TRUE, &Parser::parseBoolean);
     parser->registerPrefix(TokenType::FALSE, &Parser::parseBoolean);
     parser->registerPrefix(TokenType::LPAREN, &Parser::parseGroupedExpression);
+    parser->registerPrefix(TokenType::IF, &Parser::parseIfExpression);
 
     parser->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
     parser->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);

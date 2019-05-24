@@ -11,30 +11,40 @@ typedef std::string Operator;
 class Node;
 class Statement;
 class Expression;
+
 class Program;
+
 class Identifier;
 class IntegerLiteral;
 class Boolean;
 class PrefixExpression;
 class InfixExpression;
+class IfExpression;
+
 class ReturnStatement;
 class ExpressionStatement;
 class LetStatement;
+class BlockStatement;
 
 class AbstractDispatcher {
  public:
   virtual void dispatch(Node &node) = 0;
   virtual void dispatch(Statement &node) = 0;
   virtual void dispatch(Expression &node) = 0;
+
   virtual void dispatch(Program &node) = 0;
+
   virtual void dispatch(Identifier &node) = 0;
   virtual void dispatch(IntegerLiteral &node) = 0;
   virtual void dispatch(Boolean &node) = 0;
   virtual void dispatch(PrefixExpression &node) = 0;
   virtual void dispatch(InfixExpression &node) = 0;
+  virtual void dispatch(IfExpression &node) = 0;
+
   virtual void dispatch(ReturnStatement &node) = 0;
   virtual void dispatch(ExpressionStatement &node) = 0;
   virtual void dispatch(LetStatement &node) = 0;
+  virtual void dispatch(BlockStatement &node) = 0;
 };
 
 /*
@@ -193,6 +203,36 @@ class InfixExpression : public Expression {
 
 /*
 
+  Expression Types - complex
+
+*/
+class IfExpression : public Expression {
+  std::shared_ptr<Token> token;
+  std::shared_ptr<Expression> condition;
+  std::shared_ptr<BlockStatement> whenTrue;
+  std::shared_ptr<BlockStatement> whenFalse;
+
+ public:
+  IfExpression(std::shared_ptr<Token> token,
+               std::shared_ptr<Expression> condition,
+               std::shared_ptr<BlockStatement> whenTrue,
+               std::shared_ptr<BlockStatement> whenFalse)
+      : token(token),
+        condition(condition),
+        whenTrue(whenTrue),
+        whenFalse(whenFalse){};
+  std::shared_ptr<Expression> &getCondition();
+  std::shared_ptr<BlockStatement> &getWhenTrue();
+  std::shared_ptr<BlockStatement> &getWhenFalse();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+/*
+
   Statement Types
 
 */
@@ -247,6 +287,23 @@ class LetStatement : public Statement {
   void setValue(std::shared_ptr<Expression> value);
   const std::shared_ptr<Identifier> getName();
   const std::shared_ptr<Expression> getValue();
+  virtual std::string tokenLiteral() const override;
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+class BlockStatement : public Statement {
+ private:
+  std::shared_ptr<Token> token;
+  std::list<std::shared_ptr<Statement>> statements;
+
+ public:
+  BlockStatement(std::shared_ptr<Token> token) : token(token){};
+  const std::list<std::shared_ptr<Statement>> &getStatements() const;
+  const uint64_t size();
+  void addStatement(std::shared_ptr<Statement> statement);
   virtual std::string tokenLiteral() const override;
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
