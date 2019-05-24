@@ -2,13 +2,9 @@
 
 using namespace AST;
 
-std::string Statement::tokenLiteral() const { return "base_statement"; };
-
 std::string Statement::toDebugString() const {
   return fmt::format("[statement literal={}]", this->tokenLiteral());
 };
-
-std::string Expression::tokenLiteral() const { return "base_expression"; };
 
 std::string Expression::toDebugString() const {
   return fmt::format("[expression literal={}]", this->tokenLiteral());
@@ -55,8 +51,6 @@ std::string Program::toDebugString() const {
 
 const std::string Identifier::getValue() { return this->value; };
 
-std::string Identifier::tokenLiteral() const { return token->literal; };
-
 std::string Identifier::toDebugString() const {
   std::stringstream ss;
   ss << "[identifier";
@@ -69,8 +63,6 @@ std::string Identifier::toDebugString() const {
 
 const int IntegerLiteral::getValue() { return this->value; };
 
-std::string IntegerLiteral::tokenLiteral() const { return token->literal; };
-
 std::string IntegerLiteral::toDebugString() const {
   std::stringstream ss;
   ss << "[integer";
@@ -82,7 +74,7 @@ std::string IntegerLiteral::toDebugString() const {
 };
 
 const bool Boolean::getValue() { return this->value; };
-std::string Boolean::tokenLiteral() const { return this->token->literal; };
+
 std::string Boolean::toDebugString() const {
   std::stringstream ss;
   ss << "[bool value=" << this->value << "]";
@@ -100,8 +92,6 @@ const std::shared_ptr<Expression> PrefixExpression::getRight() {
 };
 
 const Operator PrefixExpression::getOp() { return this->op; };
-
-std::string PrefixExpression::tokenLiteral() const { return token->literal; };
 
 std::string PrefixExpression::toDebugString() const {
   std::stringstream ss;
@@ -125,8 +115,6 @@ const std::shared_ptr<Expression> InfixExpression::getRight() {
 };
 
 const Operator InfixExpression::getOp() { return this->op; };
-
-std::string InfixExpression::tokenLiteral() const { return token->literal; };
 
 std::string InfixExpression::toDebugString() const {
   std::stringstream ss;
@@ -154,7 +142,7 @@ std::shared_ptr<BlockStatement> &IfExpression::getWhenTrue() {
 std::shared_ptr<BlockStatement> &IfExpression::getWhenFalse() {
   return this->whenFalse;
 };
-std::string IfExpression::tokenLiteral() const { return this->token->literal; };
+
 std::string IfExpression::toDebugString() const {
   std::stringstream ss;
   ss << "[if token=" << *this->token
@@ -171,16 +159,17 @@ const std::list<std::shared_ptr<Identifier>> &FunctionLiteral::getArguments()
     const {
   return this->arguments;
 };
+
 const uint64_t FunctionLiteral::size() { return this->arguments.size(); };
+
 void FunctionLiteral::addArgument(std::shared_ptr<Identifier> identifier) {
   this->arguments.push_back(identifier);
 };
+
 std::shared_ptr<BlockStatement> &FunctionLiteral::getBody() {
   return this->body;
 };
-std::string FunctionLiteral::tokenLiteral() const {
-  return this->token->literal;
-};
+
 std::string FunctionLiteral::toDebugString() const {
   std::stringstream ss;
   ss << "[function token=" << *this->token << " arguments=[";
@@ -195,14 +184,15 @@ const std::list<std::shared_ptr<Expression>> &CallExpression::getArguments()
     const {
   return this->arguments;
 };
+
 const uint64_t CallExpression::size() { return this->arguments.size(); };
+
 void CallExpression::addArgument(std::shared_ptr<Expression> expr) {
   this->arguments.push_back(expr);
 };
+
 std::shared_ptr<Expression> CallExpression::getName() { return this->name; };
-std::string CallExpression::tokenLiteral() const {
-  return this->token->literal;
-};
+
 std::string CallExpression::toDebugString() const {
   std::stringstream ss;
   ss << "[call token=" << *this->token
@@ -224,8 +214,6 @@ std::shared_ptr<Expression> ReturnStatement::getReturnValue() const {
   return this->returnValue;
 }
 
-std::string ReturnStatement::tokenLiteral() const { return token->literal; };
-
 std::string ReturnStatement::toDebugString() const {
   std::stringstream ss;
   ss << "[return token=" << *this->token;
@@ -238,10 +226,6 @@ std::string ReturnStatement::toDebugString() const {
 
 std::shared_ptr<Expression> ExpressionStatement::getExpression() const {
   return this->expression;
-};
-
-std::string ExpressionStatement::tokenLiteral() const {
-  return token->literal;
 };
 
 std::string ExpressionStatement::toDebugString() const {
@@ -261,8 +245,6 @@ const std::shared_ptr<Identifier> LetStatement::getName() {
 const std::shared_ptr<Expression> LetStatement::getValue() {
   return this->value;
 };
-
-std::string LetStatement::tokenLiteral() const { return token->literal; };
 
 std::string LetStatement::toDebugString() const {
   std::stringstream ss;
@@ -289,10 +271,6 @@ const uint64_t BlockStatement::size() { return this->statements.size(); };
 
 void BlockStatement::addStatement(std::shared_ptr<Statement> statement) {
   this->statements.push_back(statement);
-};
-
-std::string BlockStatement::tokenLiteral() const {
-  return this->token->literal;
 };
 
 std::string BlockStatement::toDebugString() const {
