@@ -76,6 +76,19 @@ AST::IfExpression *testIfExpression(AST::Expression *node) {
   return statement;
 }
 
+AST::FunctionLiteral *testFunctionLiteral(
+    std::shared_ptr<AST::Expression> node) {
+  const auto statement = dynamic_cast<AST::FunctionLiteral *>(node.get());
+  REQUIRE(statement);
+  return statement;
+}
+
+AST::FunctionLiteral *testFunctionLiteral(AST::Expression *node) {
+  const auto statement = dynamic_cast<AST::FunctionLiteral *>(node);
+  REQUIRE(statement);
+  return statement;
+}
+
 AST::Identifier *testIdentifier(std::shared_ptr<AST::Expression> node,
                                 std::string val) {
   const auto expression = dynamic_cast<AST::Identifier *>(node.get());

@@ -60,6 +60,21 @@ class ASTPrinter : public AST::AbstractDispatcher {
       node.getWhenFalse()->visit(*this);
     }
   };
+  virtual void dispatch(AST::FunctionLiteral &node) override {
+    writer(fmt::format("{} (", node.tokenLiteral()));
+    std::stringstream ss;
+    auto args = node.getArguments();
+    for (auto arg = args.begin(); arg != args.end(); ++arg) {
+      if (arg == node.getArguments().begin()) {
+        ss << arg->get()->getValue();
+      } else {
+        ss << ", " << arg->get()->getValue();
+      }
+    }
+    ss << ") ";
+    writer(ss.str());
+    node.getBody()->visit(*this);
+  }
   virtual void dispatch(AST::ReturnStatement &node) override {
     writer(node.tokenLiteral());
     if (node.getReturnValue()) {
@@ -79,7 +94,20 @@ class ASTPrinter : public AST::AbstractDispatcher {
     node.getValue()->visit(*this);
     writer(";");
   };
-  virtual void dispatch(AST::BlockStatement &node) override{};
+  virtual void dispatch(AST::BlockStatement &node) override {
+    std::stringstream ss;
+    ss << "{ ";
+    auto stmts = node.getStatements();
+    for (auto stmt = stmts.begin(); stmt != stmts.end(); ++stmt) {
+      if (stmt == stmts.begin()) {
+        stmt->get()->visit(*this);
+      } else {
+        ss << std::endl;
+        stmt->get()->visit(*this);
+      }
+    }
+    writer(ss.str());
+  };
 
  public:
   static void write(WriterFn writer, AST::Node &n) {

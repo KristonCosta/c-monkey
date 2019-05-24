@@ -39,6 +39,9 @@ class Parser {
   std::map<TokenType, InfixParseFunction> infixParseFunctions;
 
   void nextToken();
+  bool expectPeek(TokenType type);
+  bool currentTokenIs(TokenType type) const;
+  bool peekTokenIs(TokenType type) const;
 
   std::shared_ptr<AST::Statement> parseStatement();
   std::shared_ptr<AST::Statement> parseLetStatement();
@@ -55,6 +58,28 @@ class Parser {
       std::shared_ptr<AST::Expression>);
   std::shared_ptr<AST::Expression> parseGroupedExpression();
   std::shared_ptr<AST::Expression> parseIfExpression();
+  std::shared_ptr<AST::Expression> parseFunctionLiteral();
+
+  template <typename OutputIterator>
+  bool parseFunctionParameters(OutputIterator out) {
+    if (this->peekTokenIs(TokenType::COMMA)) {
+      return true;
+    }
+    this->nextToken();
+
+    *(out++) = (std::make_shared<AST::Identifier>(this->currentToken,
+                                                  this->currentToken->literal));
+    while (this->peekTokenIs(TokenType::COMMA)) {
+      this->nextToken();
+      this->nextToken();
+      *(out++) = (std::make_shared<AST::Identifier>(
+          this->currentToken, this->currentToken->literal));
+    }
+    if (!this->expectPeek(TokenType::RPAREN)) {
+      return false;
+    }
+    return true;
+  }
 
   Precedence peekPrecedence();
   Precedence currentPrecedence();
@@ -62,10 +87,6 @@ class Parser {
   void addError(std::shared_ptr<Token> token, std::string message) {
     this->_errors.push_back(std::make_shared<ParserError>(token, message));
   }
-
-  bool expectPeek(TokenType type);
-  bool currentTokenIs(TokenType type) const;
-  bool peekTokenIs(TokenType type) const;
 
  public:
   Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer)) {
@@ -88,6 +109,7 @@ class Parser {
     parser->registerPrefix(TokenType::FALSE, &Parser::parseBoolean);
     parser->registerPrefix(TokenType::LPAREN, &Parser::parseGroupedExpression);
     parser->registerPrefix(TokenType::IF, &Parser::parseIfExpression);
+    parser->registerPrefix(TokenType::FUNCTION, &Parser::parseFunctionLiteral);
 
     parser->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
     parser->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);

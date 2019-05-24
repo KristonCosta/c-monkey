@@ -167,7 +167,29 @@ std::string IfExpression::toDebugString() const {
   return ss.str();
 };
 
-;
+const std::list<std::shared_ptr<Identifier>> &FunctionLiteral::getArguments()
+    const {
+  return this->arguments;
+};
+const uint64_t FunctionLiteral::size() { return this->arguments.size(); };
+void FunctionLiteral::addArgument(std::shared_ptr<Identifier> identifier) {
+  this->arguments.push_back(identifier);
+};
+std::shared_ptr<BlockStatement> &FunctionLiteral::getBody() {
+  return this->body;
+};
+std::string FunctionLiteral::tokenLiteral() const {
+  return this->token->literal;
+};
+std::string FunctionLiteral::toDebugString() const {
+  std::stringstream ss;
+  ss << "[function token=" << *this->token << " arguments=[";
+  for (const auto &ident : arguments) {
+    ss << ident->toDebugString() << ", ";
+  }
+  ss << "] body=" << this->body->toDebugString();
+  return ss.str();
+};
 
 /*
 

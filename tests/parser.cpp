@@ -157,6 +157,26 @@ TEST_CASE("If else expression parsing", "[parser]") {
   std::advance(itr, 1);
   testIdentifier(testExpressionStatement(itr->get())->getExpression(), "q");
 }
+
+TEST_CASE("Function literal parsing", "[parser]") {
+  auto input = "fn(x, y) { x + y }";
+  auto program = testParserWithInput(input);
+  REQUIRE(program->size() == 1);
+  const auto statement =
+      testExpressionStatement(program->getStatements().begin()->get());
+  const auto fnLit = testFunctionLiteral(statement->getExpression());
+  REQUIRE(fnLit->getArguments().size() == 2);
+  auto itr = fnLit->getArguments().begin();
+  testIdentifier(itr->get(), "x");
+  std::advance(itr, 1);
+  testIdentifier(itr->get(), "y");
+  REQUIRE(fnLit->getBody()->getStatements().size() == 1);
+  const auto expr =
+      testExpressionStatement(fnLit->getBody()->getStatements().begin()->get());
+  const auto infx = testInfixExpression(expr->getExpression(), "+");
+  testIdentifier(infx->getLeft(), "x");
+  testIdentifier(infx->getRight(), "y");
+}
 /*
 future
 

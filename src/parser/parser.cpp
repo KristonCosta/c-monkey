@@ -215,6 +215,28 @@ std::shared_ptr<AST::Expression> Parser::parseIfExpression() {
   return std::make_shared<AST::IfExpression>(tok, cond, whenTrue, nullptr);
 }
 
+std::shared_ptr<AST::Expression> Parser::parseFunctionLiteral() {
+  auto tok = this->currentToken;
+  if (!this->expectPeek(TokenType::LPAREN)) {
+    return nullptr;
+  }
+  std::list<std::shared_ptr<AST::Identifier>> args;
+  auto foundParams = this->parseFunctionParameters(std::back_inserter(args));
+  if (!foundParams) {
+    return nullptr;
+  }
+  if (!this->expectPeek(TokenType::LBRACE)) {
+    return nullptr;
+  }
+  auto body = this->parseBlockStatement();
+  auto fn = std::make_shared<AST::FunctionLiteral>(
+      tok, std::dynamic_pointer_cast<AST::BlockStatement>(body));
+  for (auto arg : args) {
+    fn->addArgument(arg);
+  };
+  return fn;
+}
+
 std::shared_ptr<AST::Expression> Parser::parseGroupedExpression() {
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing grouped expression for {} ", *this->currentToken);
