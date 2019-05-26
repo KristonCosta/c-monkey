@@ -293,7 +293,7 @@ std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
   this->nextToken();
   auto ret = this->parseExpression(Precedence::BOTTOM);
   auto stmt = std::make_shared<AST::ReturnStatement>(tok, ret);
-  while (!this->currentTokenIs(TokenType::SEMICOLON)) {
+  if (this->peekTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   };
   return stmt;
@@ -313,7 +313,7 @@ std::shared_ptr<AST::Statement> Parser::parseLetStatement() {
   }
   this->nextToken();
   auto val = this->parseExpression(Precedence::BOTTOM);
-  while (!this->currentTokenIs(TokenType::SEMICOLON)) {
+  if (this->peekTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
   }
   return std::make_shared<AST::LetStatement>(tok, name, val);
