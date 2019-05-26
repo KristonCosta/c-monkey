@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <eval_dispatcher.hpp>
+#include <eval.hpp>
 #include <lexer.hpp>
 #include <parser.hpp>
 #include <test_eval_helpers.hpp>
@@ -21,8 +21,8 @@ TEST_CASE("Boolean eval testing", "[eval]") {
 
 TEST_CASE("Bang eval testing", "[eval]") {
   Pair<bool> pairs[] = {
-      {"!true", false}, {"!false", true}, {"!5", false},
-      {"!0", true},     {"!!true", true}, {"!!false", false},
+      {"!true", false}, {"!false", true},   {"!5", false},
+      {"!!true", true}, {"!!false", false},
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);

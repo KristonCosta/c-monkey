@@ -1,5 +1,5 @@
 #include "repl.hpp"
-#include <eval_dispatcher.hpp>
+#include <eval.hpp>
 #include <iostream>
 #include <lexer.hpp>
 #include <parser.hpp>

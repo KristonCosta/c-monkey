@@ -57,8 +57,29 @@ class BooleanBag : public Bag {
 
 class NullBag : public Bag {
  public:
-  NullBag();
+  NullBag(){};
   virtual std::string inspect() const override { return "null"; };
   virtual Type type() const override { return Type::NULL_OBJ; };
 };
+
+template <class T>
+std::shared_ptr<T> convertType(std::shared_ptr<Bag> bag, Type type) {
+  if (bag->type() == type) {
+    return std::static_pointer_cast<T>(bag);
+  }
+  return nullptr;
+}
+
+inline std::shared_ptr<BooleanBag> convertToBoolean(std::shared_ptr<Bag> bag) {
+  return convertType<BooleanBag>(bag, Type::BOOLEAN_OBJ);
+}
+
+inline std::shared_ptr<IntegerBag> convertToInteger(std::shared_ptr<Bag> bag) {
+  return convertType<IntegerBag>(bag, Type::INTEGER_OBJ);
+}
+
+inline std::shared_ptr<NullBag> convertToNull(std::shared_ptr<Bag> bag) {
+  return convertType<NullBag>(bag, Type::NULL_OBJ);
+}
+
 }  // namespace Eval
