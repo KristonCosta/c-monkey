@@ -172,9 +172,9 @@ std::shared_ptr<AST::Expression> Parser::parseIdentifier() {
 std::shared_ptr<AST::Expression> Parser::parseIntegerLiteral() {
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing integer literal for {} ", *this->currentToken);
-  int value;
+  int64_t value;
   try {
-    value = std::stoi(this->currentToken->literal);
+    value = std::stoll(this->currentToken->literal);
   } catch (std::invalid_argument const &e) {
     this->addError(this->currentToken, "Token value was not an integer");
     return nullptr;

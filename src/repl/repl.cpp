@@ -1,4 +1,5 @@
 #include "repl.hpp"
+#include <eval_dispatcher.hpp>
 #include <iostream>
 #include <lexer.hpp>
 #include <parser.hpp>
@@ -23,9 +24,15 @@ void run() {
       fmt::print("{}", prompt);
       continue;
     }
+    auto evaluated = ASTEvaluator::eval(*program);
+    if (evaluated) {
+      fmt::print("{}\n", evaluated->inspect());
+    }
+    /*
     std::stringstream ss;
     ASTPrinter::write([&](std::string message) { ss << message; }, *program);
     fmt::print("{}\n", ss.str());
+    */
     fmt::print("{}", prompt);
   }
 }

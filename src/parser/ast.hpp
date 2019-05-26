@@ -63,7 +63,7 @@ class Node {
   virtual void visit(AbstractDispatcher &dispatcher) = 0;
 };
 
-class Statement : Node {
+class Statement : public Node {
  protected:
   std::shared_ptr<Token> token;
 
@@ -78,7 +78,7 @@ class Statement : Node {
   }
 };
 
-class Expression : Node {
+class Expression : public Node {
  protected:
   std::shared_ptr<Token> token;
 
@@ -137,14 +137,14 @@ class Identifier : public Expression {
 
 class IntegerLiteral : public Expression {
  private:
-  int value;
+  int64_t value;
 
  public:
-  IntegerLiteral(std::shared_ptr<Token> token, int value) : value(value) {
+  IntegerLiteral(std::shared_ptr<Token> token, int64_t value) : value(value) {
     this->token = token;
   }
 
-  const int getValue();
+  const int64_t getValue();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);

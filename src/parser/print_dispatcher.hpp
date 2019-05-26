@@ -10,6 +10,8 @@ class ASTPrinter : public AST::AbstractDispatcher {
   WriterFn writer;
 
   ASTPrinter(WriterFn writer) : writer(writer){};
+
+ public:
   virtual void dispatch(AST::Node &node) override {
     writer(node.tokenLiteral());
   };
@@ -123,7 +125,6 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer("}");
   };
 
- public:
   static void write(WriterFn writer, AST::Node &n) {
     auto printer = new ASTPrinter(writer);
     n.visit(*printer);

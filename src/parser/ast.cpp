@@ -61,7 +61,7 @@ std::string Identifier::toDebugString() const {
   return ss.str();
 };
 
-const int IntegerLiteral::getValue() { return this->value; };
+const int64_t IntegerLiteral::getValue() { return this->value; };
 
 std::string IntegerLiteral::toDebugString() const {
   std::stringstream ss;

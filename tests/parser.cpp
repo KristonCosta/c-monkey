@@ -5,8 +5,9 @@
 #include <parser.hpp>
 #include <print_dispatcher.hpp>
 #include <sstream>
+#include <test_helpers.hpp>
+#include <test_parser_helpers.hpp>
 #include "spdlog/sinks/stdout_color_sinks.h"
-#include "test_parser_helpers.hpp"
 
 TEST_CASE("Let statement parsing", "[parser]") {
   // spdlog::stdout_color_mt(PARSER_LOGGER);
@@ -16,7 +17,7 @@ let y = 10;
 let foobar = 838383;)V0G0N";
   std::string expectedIdentifiers[] = {"x", "y", "foobar"};
 
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 3);
 
   auto stmt = program->getStatements().begin();
@@ -29,7 +30,7 @@ let foobar = 838383;)V0G0N";
 
 TEST_CASE("Let statement with expression", "[parser]") {
   std::string input = "let x = 5 + 50;\nlet y = true;";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 2);
   auto stmt = program->getStatements().begin();
   const auto let1 = testLetStatement(stmt->get(), "x");
@@ -47,7 +48,7 @@ TEST_CASE("Return statement parsing", "[parser]") {
 return 10;
 return 9999999;)V0G0N";
   std::string expectedIdentifiers[] = {"x", "y", "foobar"};
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 3);
 
   auto stmt = program->getStatements().begin();
@@ -60,7 +61,7 @@ return 9999999;)V0G0N";
 
 TEST_CASE("Return statement with expression", "[parser]") {
   std::string input = "return 6 + 7;\nreturn add(1,2);";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 2);
   auto stmt = program->getStatements().begin();
   const auto ret1 = testReturnStatement(stmt->get());
@@ -78,7 +79,7 @@ TEST_CASE("Return statement with expression", "[parser]") {
 
 TEST_CASE("Identifier expression statement parsing", "[parser]") {
   std::string input = R"V0G0N(foobar;)V0G0N";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 1);
 
   auto stmt = program->getStatements().begin();
@@ -88,7 +89,7 @@ TEST_CASE("Identifier expression statement parsing", "[parser]") {
 
 TEST_CASE("Integer literal expression statement parsing", "[parser]") {
   std::string input = R"V0G0N(5;)V0G0N";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 1);
 
   auto stmt = program->getStatements().begin();
@@ -104,7 +105,7 @@ TEST_CASE("Prefix operator parsing", "[parser]") {
   };
   testPair pairs[] = {{"!5;", "!", 5}, {"-15;", "-", 15}};
   for (const auto &pair : pairs) {
-    auto program = testParserWithInput(pair.input);
+    auto program = testProgramWithInput(pair.input);
     REQUIRE(program->size() == 1);
 
     auto stmt = program->getStatements().begin();
@@ -152,7 +153,7 @@ TEST_CASE("Prefix operator precedence parsing", "[parser]") {
 
   };
   for (const auto &pair : pairs) {
-    auto program = testParserWithInput(pair.input);
+    auto program = testProgramWithInput(pair.input);
     std::stringstream ss;
     ASTPrinter::write([&](std::string message) { ss << message; }, *program);
     REQUIRE(ss.str() == pair.expected);
@@ -161,7 +162,7 @@ TEST_CASE("Prefix operator precedence parsing", "[parser]") {
 
 TEST_CASE("If expression parsing", "[parser]") {
   auto input = "if (x < y) { x }";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
 
   REQUIRE(program->size() == 1);
   auto stmt = program->getStatements().begin();
@@ -176,7 +177,7 @@ TEST_CASE("If expression parsing", "[parser]") {
 
 TEST_CASE("If else expression parsing", "[parser]") {
   auto input = "if (x > y) { w } else { z; q }";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
 
   REQUIRE(program->size() == 1);
   auto stmt = program->getStatements().begin();
@@ -198,7 +199,7 @@ TEST_CASE("If else expression parsing", "[parser]") {
 
 TEST_CASE("Function literal parsing", "[parser]") {
   auto input = "fn(x, y) { x + y }";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 1);
   const auto statement =
       testExpressionStatement(program->getStatements().begin()->get());
@@ -218,7 +219,7 @@ TEST_CASE("Function literal parsing", "[parser]") {
 
 TEST_CASE("Call expression testing", "[parser]") {
   auto input = "add(1, 2 * 3, 4 + 5);";
-  auto program = testParserWithInput(input);
+  auto program = testProgramWithInput(input);
   REQUIRE(program->size() == 1);
   const auto statement =
       testExpressionStatement(program->getStatements().begin()->get());
