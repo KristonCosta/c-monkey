@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 #include <eval.hpp>
 #include <lexer.hpp>
+#include <optional>
 #include <parser.hpp>
 #include <test_eval_helpers.hpp>
 #include <test_helpers.hpp>
