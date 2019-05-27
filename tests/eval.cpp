@@ -153,3 +153,25 @@ TEST_CASE("Let statement testing", "[eval]") {
     testIntegerBag(bag, pair.expected);
   }
 }
+
+TEST_CASE("Function eval testing", "[eval]") {
+  //  spdlog::stdout_color_mt(EVAL_LOGGER);
+  Pair<int64_t> pairs[] = {
+      {"let identity = fn(x) { x;}; identity(12);", 12},
+      {"let greater = fn(x, y) { x > y; }; if (greater(2, 1)){ 10; } else "
+       "{20;}",
+       10},
+      {"fn(x) { x + 1;}(5)", 6},
+      {"let newAdder = fn(x) { fn(y) { x + y }; }; let addTwo = newAdder(2); "
+       "addTwo(10);",
+       12},
+
+  };
+
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
+    testIntegerBag(bag, pair.expected);
+  }
+}
