@@ -1,4 +1,5 @@
 #include "repl.hpp"
+#include <env.hpp>
 #include <eval.hpp>
 #include <iostream>
 #include <lexer.hpp>
@@ -11,6 +12,7 @@ void run() {
   const std::string prompt = ">> ";
   const std::string prompt_indent = "   ";
   fmt::print("{}", prompt);
+  auto env = std::make_shared<Env::Environment>();
   for (std::string line; std::getline(std::cin, line);) {
     auto lexer = Lexer::from(line);
     auto parser = Parser::from(std::move(lexer));
@@ -24,7 +26,7 @@ void run() {
       fmt::print("{}", prompt);
       continue;
     }
-    auto evaluated = ASTEvaluator::eval(*program);
+    auto evaluated = ASTEvaluator::eval(*program, env);
     if (evaluated) {
       fmt::print("{}\n", evaluated->inspect());
     }

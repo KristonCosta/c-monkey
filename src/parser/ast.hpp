@@ -262,18 +262,18 @@ class FunctionLiteral : public Expression {
 };
 
 class CallExpression : public Expression {
-  std::shared_ptr<Expression> name;
+  std::shared_ptr<Expression> func;
   std::list<std::shared_ptr<Expression>> arguments;
 
  public:
-  CallExpression(std::shared_ptr<Token> token, std::shared_ptr<Expression> name)
-      : name(name) {
+  CallExpression(std::shared_ptr<Token> token, std::shared_ptr<Expression> func)
+      : func(func) {
     this->token = token;
   };
   const std::list<std::shared_ptr<Expression>> &getArguments() const;
   const uint64_t size();
   void addArgument(std::shared_ptr<Expression> expr);
-  std::shared_ptr<Expression> getName();
+  std::shared_ptr<Expression> getFunction();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);

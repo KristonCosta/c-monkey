@@ -4,18 +4,20 @@
 #include <sstream>
 #include <string>
 #include "ast.hpp"
+#include "env.hpp"
 #include "spdlog/sinks/null_sink.h"
 
 const std::string EVAL_LOGGER = "eval";
 
 class ASTEvaluator : public AST::AbstractDispatcher {
  private:
-  ASTEvaluator() {
+  ASTEvaluator(std::shared_ptr<Env::Environment> env) : env(env) {
     if (!spdlog::get(EVAL_LOGGER)) {
       spdlog::create<spdlog::sinks::null_sink_st>(EVAL_LOGGER);
     }
   };
   std::shared_ptr<Eval::Bag> bag = nullptr;
+  std::shared_ptr<Env::Environment> env;
 
  public:
   virtual void dispatch(AST::Node &node) override;
@@ -35,8 +37,9 @@ class ASTEvaluator : public AST::AbstractDispatcher {
   virtual void dispatch(AST::LetStatement &node) override;
   virtual void dispatch(AST::BlockStatement &node) override;
 
-  static std::shared_ptr<Eval::Bag> eval(AST::Node &n) {
-    auto eval = new ASTEvaluator();
+  static std::shared_ptr<Eval::Bag> eval(
+      AST::Node &n, std::shared_ptr<Env::Environment> env) {
+    auto eval = new ASTEvaluator(env);
     n.visit(*eval);
     auto bag = eval->bag;
     delete eval;

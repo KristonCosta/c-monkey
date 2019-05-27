@@ -191,12 +191,14 @@ void CallExpression::addArgument(std::shared_ptr<Expression> expr) {
   this->arguments.push_back(expr);
 };
 
-std::shared_ptr<Expression> CallExpression::getName() { return this->name; };
+std::shared_ptr<Expression> CallExpression::getFunction() {
+  return this->func;
+};
 
 std::string CallExpression::toDebugString() const {
   std::stringstream ss;
   ss << "[call token=" << *this->token
-     << " name=" << this->name->toDebugString() << " arguments=[";
+     << " func=" << this->func->toDebugString() << " arguments=[";
   for (const auto &arg : arguments) {
     ss << arg->toDebugString() << ", ";
   }

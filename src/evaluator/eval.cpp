@@ -25,6 +25,12 @@ std::shared_ptr<Eval::ReturnBag> makeReturnBag(
   return std::make_shared<Eval::ReturnBag>(value);
 }
 
+std::shared_ptr<Eval::FunctionBag> makeFunctionBag(
+    Env::Environment env, std::list<std::shared_ptr<AST::Identifier>> arguments,
+    std::shared_ptr<AST::BlockStatement> body) {
+  return std::make_shared<Eval::FunctionBag>(env, arguments, body);
+}
+
 std::shared_ptr<Eval::BooleanBag> getBooleanBag(bool val) {
   if (val) {
     return TRUE_BAG;
@@ -140,30 +146,35 @@ bool isTruthy(Eval::Bag &bag) {
   }
 }
 
-std::shared_ptr<Eval::Bag> evalIfExpression(AST::IfExpression &node) {
+std::shared_ptr<Eval::Bag> evalIfExpression(
+    AST::IfExpression &node, std::shared_ptr<Env::Environment> env) {
   std::shared_ptr<Eval::Bag> bag = NULL_BAG;
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating when {} expression", Eval::typeToString(bag->type()));
 
-  auto condition = ASTEvaluator::eval(*node.getCondition());
+  auto condition = ASTEvaluator::eval(*node.getCondition(), env);
   if (isError(condition)) {
     return condition;
   }
   if (isTruthy(*condition)) {
     spdlog::get(EVAL_LOGGER)->info("Evaluating when true expression");
-    bag = ASTEvaluator::eval(*node.getWhenTrue());
+    bag = ASTEvaluator::eval(*node.getWhenTrue(), env);
   } else if (node.getWhenFalse()) {
     spdlog::get(EVAL_LOGGER)->info("Evaluating when false expression");
-    bag = ASTEvaluator::eval(*node.getWhenFalse());
+    bag = ASTEvaluator::eval(*node.getWhenFalse(), env);
   }
   return bag;
 }
 
 std::shared_ptr<Eval::Bag> evalProgram(
-    std::list<std::shared_ptr<AST::Statement>> &statements) {
+    std::list<std::shared_ptr<AST::Statement>> &statements,
+    std::shared_ptr<Env::Environment> env) {
   std::shared_ptr<Eval::Bag> bag = NULL_BAG;
   for (const auto &statement : statements) {
-    bag = ASTEvaluator::eval(*statement.get());
+    bag = ASTEvaluator::eval(*statement.get(), env);
+    if (!bag) {
+      continue;
+    }
     if (bag->type() == Eval::Type::RETURN_OBJ) {
       return convertToReturn(bag)->value();
     }
@@ -175,10 +186,11 @@ std::shared_ptr<Eval::Bag> evalProgram(
 }
 
 std::shared_ptr<Eval::Bag> evalBlockStatement(
-    std::list<std::shared_ptr<AST::Statement>> &statements) {
+    std::list<std::shared_ptr<AST::Statement>> &statements,
+    std::shared_ptr<Env::Environment> env) {
   std::shared_ptr<Eval::Bag> bag = NULL_BAG;
   for (const auto &statement : statements) {
-    bag = ASTEvaluator::eval(*statement.get());
+    bag = ASTEvaluator::eval(*statement.get(), env);
     if (bag && ((bag->type() == Eval::Type::RETURN_OBJ) ||
                 (bag->type() == Eval::Type::ERROR_OBJ))) {
       return bag;
@@ -199,11 +211,17 @@ void ASTEvaluator::dispatch(AST::Expression &node){
 void ASTEvaluator::dispatch(AST::Program &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating program");
   auto statements = node.getStatements();
-  bag = evalProgram(statements);
+  bag = evalProgram(statements, env);
   spdlog::get(EVAL_LOGGER)->info("Finished evaulating program");
 };
-void ASTEvaluator::dispatch(AST::Identifier &node){
-
+void ASTEvaluator::dispatch(AST::Identifier &node) {
+  spdlog::get(EVAL_LOGGER)->info("Fetching identifier {}", node.getValue());
+  auto val = env->get(node.getValue());
+  if (val) {
+    bag = val;
+  } else {
+    bag = makeIdentifierNotFoundError(node.getValue());
+  }
 };
 void ASTEvaluator::dispatch(AST::Boolean &node) {
   spdlog::get(EVAL_LOGGER)->info("Fetching boolean {}", node.getValue());
@@ -218,14 +236,14 @@ void ASTEvaluator::dispatch(AST::PrefixExpression &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating prefix expression {}", node.getOp());
   if (node.getOp() == "!") {
-    auto right = eval(*node.getRight());
+    auto right = eval(*node.getRight(), env);
     if (isError(right)) {
       bag = right;
       return;
     }
     bag = evalBangOperator(right);
   } else if (node.getOp() == "-") {
-    auto right = eval(*node.getRight());
+    auto right = eval(*node.getRight(), env);
     if (isError(right)) {
       bag = right;
       return;
@@ -236,12 +254,12 @@ void ASTEvaluator::dispatch(AST::PrefixExpression &node) {
 void ASTEvaluator::dispatch(AST::InfixExpression &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating infix expression {}", node.getOp());
-  auto left = eval(*node.getLeft());
+  auto left = eval(*node.getLeft(), env);
   if (isError(left)) {
     bag = left;
     return;
   }
-  auto right = eval(*node.getRight());
+  auto right = eval(*node.getRight(), env);
   if (isError(right)) {
     bag = right;
     return;
@@ -251,15 +269,44 @@ void ASTEvaluator::dispatch(AST::InfixExpression &node) {
       ->info("Returning infix statement {}", bag->inspect());
 };
 void ASTEvaluator::dispatch(AST::IfExpression &node) {
-  bag = evalIfExpression(node);
+  bag = evalIfExpression(node, env);
   spdlog::get(EVAL_LOGGER)
       ->info("Returning if of type {}", Eval::typeToString(bag->type()));
 };
-void ASTEvaluator::dispatch(AST::FunctionLiteral &node) {}
-void ASTEvaluator::dispatch(AST::CallExpression &node) {}
+void ASTEvaluator::dispatch(AST::FunctionLiteral &node) {
+  bag = makeFunctionBag(env, node.getArguments(), node.getBody());
+}
+void ASTEvaluator::dispatch(AST::CallExpression &node) {
+  auto val = eval(*node.getFunction(), env);
+  if (isError(val)) {
+    bag = val;
+    return;
+  }
+  if (val->type() != Eval::Type::FUNC_OBJ) {
+    bag = makeNotAFunctionError(node.getFunction()->tokenLiteral());
+    return;
+  }
+  auto func = Eval::convertToFunction(val);
+  std::map<std::string, std::shared_ptr<Eval::Bag>> args;
+  auto identIter = func->arguments().begin();
+  for (const auto &arg : node.getArguments()) {
+    auto evalArg = eval(*arg, env);
+    if (isError(evalArg)) {
+      bag = evalArg;
+      return;
+    }
+    args[identIter->get()->getValue()] = evalArg;
+    identIter++;
+  }
+  auto wrappedEnv = std::make_shared<Env::Environment>(env, args);
+  bag = eval(*func->body(), wrappedEnv);
+  if (bag->type() == Eval::Type::RETURN_OBJ) {
+    bag = convertToReturn(bag)->value();
+  }
+}
 void ASTEvaluator::dispatch(AST::ReturnStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating return statement");
-  auto ret = eval(*node.getReturnValue());
+  auto ret = eval(*node.getReturnValue(), env);
   if (isError(ret)) {
     bag = ret;
     return;
@@ -269,13 +316,24 @@ void ASTEvaluator::dispatch(AST::ReturnStatement &node) {
 void ASTEvaluator::dispatch(AST::ExpressionStatement &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating expression statement {}", node.tokenLiteral());
-  bag = eval(*node.getExpression());
+  bag = eval(*node.getExpression(), env);
 };
-void ASTEvaluator::dispatch(AST::LetStatement &node){
+void ASTEvaluator::dispatch(AST::LetStatement &node) {
+  spdlog::get(EVAL_LOGGER)->info("Evaluating let statement");
+  auto val = eval(*node.getValue(), env);
+  if (isError(val)) {
+    bag = val;
+    return;
+  }
 
+  spdlog::get(EVAL_LOGGER)->info("Setting let statemen {}", env);
+  env->set(node.getName()->getValue(), val);
+  spdlog::get(EVAL_LOGGER)->info("Set let statement");
+
+  bag = nullptr;
 };
 void ASTEvaluator::dispatch(AST::BlockStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating block expression");
   auto statements = node.getStatements();
-  bag = evalBlockStatement(statements);
+  bag = evalBlockStatement(statements, env);
 };

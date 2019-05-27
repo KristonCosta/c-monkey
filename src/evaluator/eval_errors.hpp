@@ -26,3 +26,14 @@ inline std::shared_ptr<Eval::ErrorBag> makePrefixOperatorError(
   return makeErrorWithMessage(
       fmt::format("unknown operator: {}{}", op, Eval::typeToString(leftType)));
 }
+
+inline std::shared_ptr<Eval::ErrorBag> makeIdentifierNotFoundError(
+    std::string identifier) {
+  return makeErrorWithMessage(
+      fmt::format("identifier not found: {}", identifier));
+}
+
+inline std::shared_ptr<Eval::ErrorBag> makeNotAFunctionError(
+    std::string identifier) {
+  return makeErrorWithMessage(fmt::format("not a function: {}", identifier));
+}

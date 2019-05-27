@@ -79,7 +79,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
     node.getBody()->visit(*this);
   }
   virtual void dispatch(AST::CallExpression &node) override {
-    node.getName()->visit(*this);
+    node.getFunction()->visit(*this);
     writer("(");
     auto args = node.getArguments();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
@@ -112,7 +112,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer(";");
   };
   virtual void dispatch(AST::BlockStatement &node) override {
-    writer("{ ");
+    // writer("{ ");
     auto stmts = node.getStatements();
     for (auto stmt = stmts.begin(); stmt != stmts.end(); ++stmt) {
       if (stmt == stmts.begin()) {
@@ -122,7 +122,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
         stmt->get()->visit(*this);
       }
     }
-    writer("}");
+    // writer("}");
   };
 
   static void write(WriterFn writer, AST::Node &n) {

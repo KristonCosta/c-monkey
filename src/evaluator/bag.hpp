@@ -1,5 +1,9 @@
 #pragma once
 #include <spdlog/spdlog.h>
+#include <ast.hpp>
+#include <env.hpp>
+#include <print_dispatcher.hpp>
+#include <sstream>
 #include <string>
 
 namespace Eval {
@@ -10,6 +14,7 @@ enum class Type {
   BOOLEAN_OBJ,
   NULL_OBJ,
   RETURN_OBJ,
+  FUNC_OBJ,
   ERROR_OBJ,
 };
 
@@ -77,6 +82,42 @@ class ReturnBag : public Bag {
   std::shared_ptr<Bag> value() const { return _value; }
 };
 
+class FunctionBag : public Bag {
+ private:
+  Env::Environment _env;
+  std::list<std::shared_ptr<AST::Identifier>> _arguments;
+  std::shared_ptr<AST::BlockStatement> _body;
+
+ public:
+  FunctionBag(Env::Environment env,
+              std::list<std::shared_ptr<AST::Identifier>> arguments,
+              std::shared_ptr<AST::BlockStatement> body)
+      : _env(env), _arguments(arguments), _body(body){};
+  virtual std::string inspect() const override {
+    std::stringstream ss;
+    ss << "fn(";
+    for (auto arg = _arguments.begin(); arg != _arguments.end(); ++arg) {
+      if (arg == _arguments.begin()) {
+        ASTPrinter::write([&](std::string message) { ss << message; },
+                          *arg->get());
+      } else {
+        ss << ", ";
+        ASTPrinter::write([&](std::string message) { ss << message; },
+                          *arg->get());
+      }
+    }
+    ss << ") {\n";
+    ASTPrinter::write([&](std::string message) { ss << message; }, *_body);
+    ss << "\n}";
+    return ss.str();
+  };
+  virtual Type type() const override { return Type::FUNC_OBJ; };
+  std::list<std::shared_ptr<AST::Identifier>>& arguments() {
+    return _arguments;
+  }
+  std::shared_ptr<AST::BlockStatement> body() { return _body; }
+};
+
 class ErrorBag : public Bag {
  private:
   std::string _message;
@@ -104,6 +145,8 @@ inline std::string typeToString(Type type) {
       return "RETURN";
     case Type::ERROR_OBJ:
       return "ERROR";
+    case Type::FUNC_OBJ:
+      return "FUNCTION";
   }
 }
 
@@ -133,5 +176,10 @@ inline std::shared_ptr<ReturnBag> convertToReturn(std::shared_ptr<Bag> bag) {
 
 inline std::shared_ptr<ErrorBag> convertToError(std::shared_ptr<Bag> bag) {
   return convertType<ErrorBag>(bag, Type::ERROR_OBJ);
+}
+
+inline std::shared_ptr<FunctionBag> convertToFunction(
+    std::shared_ptr<Bag> bag) {
+  return convertType<FunctionBag>(bag, Type::FUNC_OBJ);
 }
 }  // namespace Eval

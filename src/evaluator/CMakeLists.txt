@@ -1,6 +1,7 @@
 project(CMonkeyEvaluator) 
 
 add_library(${PROJECT_NAME}  
+  env.cpp
 	eval.cpp) 
 
 target_include_directories(${PROJECT_NAME}

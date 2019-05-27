@@ -134,7 +134,7 @@ inline AST::CallExpression *testCallExpression(
     std::shared_ptr<AST::Expression> node, std::string name) {
   const auto expression = dynamic_cast<AST::CallExpression *>(node.get());
   REQUIRE(expression);
-  testIdentifier(expression->getName(), name);
+  testIdentifier(expression->getFunction(), name);
   return expression;
 }
 

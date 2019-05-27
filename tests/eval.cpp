@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <env.hpp>
 #include <eval.hpp>
 #include <lexer.hpp>
 #include <parser.hpp>
@@ -7,7 +8,6 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 TEST_CASE("Integer eval testing", "[eval]") {
-  // spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<int64_t> pairs[] = {
       {"5", 5},
       {"123", 123},
@@ -22,7 +22,8 @@ TEST_CASE("Integer eval testing", "[eval]") {
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
-    auto bag = ASTEvaluator::eval(*program);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
     testIntegerBag(bag, pair.expected);
   }
 };
@@ -42,7 +43,8 @@ TEST_CASE("Boolean eval testing", "[eval]") {
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
-    auto bag = ASTEvaluator::eval(*program);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
     testBooleanBag(bag, pair.expected);
   }
 };
@@ -54,13 +56,13 @@ TEST_CASE("Bang eval testing", "[eval]") {
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
-    auto bag = ASTEvaluator::eval(*program);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
     testBooleanBag(bag, pair.expected);
   }
 };
 
 TEST_CASE("If else testing", "[eval]") {
-  // spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<int64_t> pairs[] = {
       {"if (true) { 10 }", 10},
 
@@ -72,20 +74,21 @@ TEST_CASE("If else testing", "[eval]") {
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
-    auto bag = ASTEvaluator::eval(*program);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
     testIntegerBag(bag, pair.expected);
   }
   // Expecting nulls
   Pair<int64_t> pairs2[] = {{"if (false) { 10 }", 1}, {"if (1 > 2) { 10 }", 1}};
   for (const auto& pair : pairs2) {
     auto program = testProgramWithInput(pair.input);
-    auto bag = ASTEvaluator::eval(*program);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
     testNullBag(bag);
   }
 };
 
 TEST_CASE("Return statement testing", "[eval]") {
-  // spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<int64_t> pairs[] = {
       {"return 10;", 10},
       {"return 9; 10", 9},
@@ -102,13 +105,13 @@ TEST_CASE("Return statement testing", "[eval]") {
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
-    auto bag = ASTEvaluator::eval(*program);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
     testIntegerBag(bag, pair.expected);
   }
 };
 
 TEST_CASE("Error testing", "[eval]") {
-  // spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<std::string> pairs[] = {
       {"5 + true;", "type mismatch: INTEGER + BOOLEAN"},
       {"5 + true; 5;", "type mismatch: INTEGER + BOOLEAN"},
@@ -116,6 +119,7 @@ TEST_CASE("Error testing", "[eval]") {
       {"true + false;", "unknown operator: BOOLEAN + BOOLEAN"},
       {"5; true + true;", "unknown operator: BOOLEAN + BOOLEAN"},
       {"if (10 > 1) { true + false; }", "unknown operator: BOOLEAN + BOOLEAN"},
+      {"test;", "identifier not found: test"},
       {R"V0G0N(
       if (10 > 2) {
         if (true) {
@@ -128,7 +132,24 @@ TEST_CASE("Error testing", "[eval]") {
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
-    auto bag = ASTEvaluator::eval(*program);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
     testErrorBag(bag, pair.expected);
+  }
+}
+
+TEST_CASE("Let statement testing", "[eval]") {
+  //  spdlog::stdout_color_mt(EVAL_LOGGER);
+  Pair<int64_t> pairs[] = {
+      {"let a = 5; a;", 5},
+      {"let a = 5 * 5; a;", 25},
+      {"let a = 5; let b = a; b;", 5},
+      {"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+  };
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
+    testIntegerBag(bag, pair.expected);
   }
 }
