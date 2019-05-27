@@ -1,7 +1,7 @@
 #pragma once
+#include <iostream>
 #include <map>
 #include <string>
-
 namespace Eval {
 class Bag;
 }

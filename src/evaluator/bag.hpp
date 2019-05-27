@@ -84,12 +84,12 @@ class ReturnBag : public Bag {
 
 class FunctionBag : public Bag {
  private:
-  Env::Environment _env;
+  std::shared_ptr<Env::Environment> _env;
   std::list<std::shared_ptr<AST::Identifier>> _arguments;
   std::shared_ptr<AST::BlockStatement> _body;
 
  public:
-  FunctionBag(Env::Environment env,
+  FunctionBag(std::shared_ptr<Env::Environment> env,
               std::list<std::shared_ptr<AST::Identifier>> arguments,
               std::shared_ptr<AST::BlockStatement> body)
       : _env(env), _arguments(arguments), _body(body){};
@@ -116,6 +116,7 @@ class FunctionBag : public Bag {
     return _arguments;
   }
   std::shared_ptr<AST::BlockStatement> body() { return _body; }
+  std::shared_ptr<Env::Environment> env() { return _env; }
 };
 
 class ErrorBag : public Bag {

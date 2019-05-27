@@ -26,7 +26,8 @@ std::shared_ptr<Eval::ReturnBag> makeReturnBag(
 }
 
 std::shared_ptr<Eval::FunctionBag> makeFunctionBag(
-    Env::Environment env, std::list<std::shared_ptr<AST::Identifier>> arguments,
+    std::shared_ptr<Env::Environment> env,
+    std::list<std::shared_ptr<AST::Identifier>> arguments,
     std::shared_ptr<AST::BlockStatement> body) {
   return std::make_shared<Eval::FunctionBag>(env, arguments, body);
 }
@@ -298,7 +299,7 @@ void ASTEvaluator::dispatch(AST::CallExpression &node) {
     args[identIter->get()->getValue()] = evalArg;
     identIter++;
   }
-  auto wrappedEnv = std::make_shared<Env::Environment>(env, args);
+  auto wrappedEnv = std::make_shared<Env::Environment>(func->env(), args);
   bag = eval(*func->body(), wrappedEnv);
   if (bag->type() == Eval::Type::RETURN_OBJ) {
     bag = convertToReturn(bag)->value();
