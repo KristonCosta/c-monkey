@@ -7,7 +7,12 @@ python: "3.7"
 dist: xenial
 addons:
   apt:
-    packages: lcov
+    packages: 
+      - lcov
+      - g++-7
+    sources:
+      - ubuntu-toolchain-r-test
+
 
 compiler:
   - gcc
