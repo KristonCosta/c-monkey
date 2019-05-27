@@ -60,6 +60,7 @@ TEST_CASE("Bang eval testing", "[eval]") {
 };
 
 TEST_CASE("If else testing", "[eval]") {
+  // spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<int64_t> pairs[] = {
       {"if (true) { 10 }", 10},
 
@@ -76,7 +77,7 @@ TEST_CASE("If else testing", "[eval]") {
   }
   // Expecting nulls
   Pair<int64_t> pairs2[] = {{"if (false) { 10 }", 1}, {"if (1 > 2) { 10 }", 1}};
-  for (const auto& pair : pairs) {
+  for (const auto& pair : pairs2) {
     auto program = testProgramWithInput(pair.input);
     auto bag = ASTEvaluator::eval(*program);
     testNullBag(bag);
