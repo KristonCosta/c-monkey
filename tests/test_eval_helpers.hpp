@@ -30,3 +30,10 @@ inline void testNullBag(std::shared_ptr<Eval::Bag> bag) {
   REQUIRE(bag);
   REQUIRE(bag->type() == Eval::Type::NULL_OBJ);
 }
+
+inline void testErrorBag(std::shared_ptr<Eval::Bag> bag, std::string message) {
+  REQUIRE(bag);
+  REQUIRE(bag->type() == Eval::Type::ERROR_OBJ);
+  auto ret = std::static_pointer_cast<Eval::ErrorBag>(bag);
+  REQUIRE(ret->message() == message);
+}

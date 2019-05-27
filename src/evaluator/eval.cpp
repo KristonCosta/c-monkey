@@ -1,6 +1,7 @@
 #include <spdlog/fmt/ostr.h>
 #include <bag.hpp>
 #include <eval.hpp>
+#include <eval_errors.hpp>
 #include <sstream>
 #include <string>
 #include "ast.hpp"
@@ -19,11 +20,23 @@ std::shared_ptr<Eval::IntegerBag> makeIntegerBag(int64_t value) {
   return std::make_shared<Eval::IntegerBag>(value);
 }
 
+std::shared_ptr<Eval::ReturnBag> makeReturnBag(
+    std::shared_ptr<Eval::Bag> value) {
+  return std::make_shared<Eval::ReturnBag>(value);
+}
+
 std::shared_ptr<Eval::BooleanBag> getBooleanBag(bool val) {
   if (val) {
     return TRUE_BAG;
   }
   return FALSE_BAG;
+}
+
+bool isError(std::shared_ptr<Eval::Bag> bag) {
+  if (bag) {
+    return bag->type() == Eval::Type::ERROR_OBJ;
+  }
+  return false;
 }
 
 std::shared_ptr<Eval::Bag> evalBangOperator(std::shared_ptr<Eval::Bag> right) {
@@ -40,13 +53,13 @@ std::shared_ptr<Eval::Bag> evalBangOperator(std::shared_ptr<Eval::Bag> right) {
     default:
       return FALSE_BAG;
   };
-  return NULL_BAG;
+  return makePrefixOperatorError(right->type(), "!");
 }
 
 std::shared_ptr<Eval::Bag> evalNegateOperator(
     std::shared_ptr<Eval::Bag> right) {
   if (right->type() != Eval::Type::INTEGER_OBJ) {
-    return NULL_BAG;
+    return makePrefixOperatorError(right->type(), "-");
   }
   return std::make_shared<Eval::IntegerBag>(convertToInteger(right)->value() *
                                             -1);
@@ -72,7 +85,7 @@ std::shared_ptr<Eval::Bag> evalIntegerInfixExpression(
   } else if (op == "!=") {
     return getBooleanBag(left->value() != right->value());
   }
-  return NULL_BAG;
+  return makeInfixUnknownOperatorError(left->type(), right->type(), op);
 }
 
 std::shared_ptr<Eval::Bag> evalBooleanInfixExpression(
@@ -83,7 +96,7 @@ std::shared_ptr<Eval::Bag> evalBooleanInfixExpression(
   } else if (op == "!=") {
     return getBooleanBag(left->value() != right->value());
   }
-  return NULL_BAG;
+  return makeInfixUnknownOperatorError(left->type(), right->type(), op);
 }
 
 std::shared_ptr<Eval::Bag> evalInfixExpression(
@@ -95,17 +108,23 @@ std::shared_ptr<Eval::Bag> evalInfixExpression(
         return evalIntegerInfixExpression(op, convertToInteger(left),
                                           convertToInteger(right));
       }
-      return NULL_BAG;
+      break;
     }
     case Eval::Type::BOOLEAN_OBJ: {
       if (right->type() == Eval::Type::BOOLEAN_OBJ) {
         return evalBooleanInfixExpression(op, convertToBoolean(left),
                                           convertToBoolean(right));
       }
-      return NULL_BAG;
+      break;
     }
     default:
-      return NULL_BAG;
+      // continue..
+      break;
+  }
+  if (left->type() != right->type()) {
+    return makeInfixTypeMismatchError(left->type(), right->type(), op);
+  } else {
+    return makeInfixUnknownOperatorError(left->type(), right->type(), op);
   }
 }
 
@@ -127,6 +146,9 @@ std::shared_ptr<Eval::Bag> evalIfExpression(AST::IfExpression &node) {
       ->info("Evaluating when {} expression", Eval::typeToString(bag->type()));
 
   auto condition = ASTEvaluator::eval(*node.getCondition());
+  if (isError(condition)) {
+    return condition;
+  }
   if (isTruthy(*condition)) {
     spdlog::get(EVAL_LOGGER)->info("Evaluating when true expression");
     bag = ASTEvaluator::eval(*node.getWhenTrue());
@@ -137,13 +159,30 @@ std::shared_ptr<Eval::Bag> evalIfExpression(AST::IfExpression &node) {
   return bag;
 }
 
-std::shared_ptr<Eval::Bag> evalStatements(
+std::shared_ptr<Eval::Bag> evalProgram(
     std::list<std::shared_ptr<AST::Statement>> &statements) {
   std::shared_ptr<Eval::Bag> bag = NULL_BAG;
   for (const auto &statement : statements) {
-    spdlog::get(EVAL_LOGGER)
-        ->info("Processing statement {}", statement.get()->toDebugString());
     bag = ASTEvaluator::eval(*statement.get());
+    if (bag->type() == Eval::Type::RETURN_OBJ) {
+      return convertToReturn(bag)->value();
+    }
+    if (bag->type() == Eval::Type::ERROR_OBJ) {
+      return bag;
+    }
+  }
+  return bag;
+}
+
+std::shared_ptr<Eval::Bag> evalBlockStatement(
+    std::list<std::shared_ptr<AST::Statement>> &statements) {
+  std::shared_ptr<Eval::Bag> bag = NULL_BAG;
+  for (const auto &statement : statements) {
+    bag = ASTEvaluator::eval(*statement.get());
+    if (bag && ((bag->type() == Eval::Type::RETURN_OBJ) ||
+                (bag->type() == Eval::Type::ERROR_OBJ))) {
+      return bag;
+    }
   }
   return bag;
 }
@@ -160,7 +199,8 @@ void ASTEvaluator::dispatch(AST::Expression &node){
 void ASTEvaluator::dispatch(AST::Program &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating program");
   auto statements = node.getStatements();
-  bag = evalStatements(statements);
+  bag = evalProgram(statements);
+  spdlog::get(EVAL_LOGGER)->info("Finished evaulating program");
 };
 void ASTEvaluator::dispatch(AST::Identifier &node){
 
@@ -178,14 +218,37 @@ void ASTEvaluator::dispatch(AST::PrefixExpression &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating prefix expression {}", node.getOp());
   if (node.getOp() == "!") {
-    bag = evalBangOperator(eval(*node.getRight()));
+    auto right = eval(*node.getRight());
+    if (isError(right)) {
+      bag = right;
+      return;
+    }
+    bag = evalBangOperator(right);
   } else if (node.getOp() == "-") {
-    bag = evalNegateOperator(eval(*node.getRight()));
+    auto right = eval(*node.getRight());
+    if (isError(right)) {
+      bag = right;
+      return;
+    }
+    bag = evalNegateOperator(right);
   }
 };
 void ASTEvaluator::dispatch(AST::InfixExpression &node) {
-  bag = evalInfixExpression(node.getOp(), eval(*node.getLeft()),
-                            eval(*node.getRight()));
+  spdlog::get(EVAL_LOGGER)
+      ->info("Evaluating infix expression {}", node.getOp());
+  auto left = eval(*node.getLeft());
+  if (isError(left)) {
+    bag = left;
+    return;
+  }
+  auto right = eval(*node.getRight());
+  if (isError(right)) {
+    bag = right;
+    return;
+  }
+  bag = evalInfixExpression(node.getOp(), left, right);
+  spdlog::get(EVAL_LOGGER)
+      ->info("Returning infix statement {}", bag->inspect());
 };
 void ASTEvaluator::dispatch(AST::IfExpression &node) {
   bag = evalIfExpression(node);
@@ -194,8 +257,14 @@ void ASTEvaluator::dispatch(AST::IfExpression &node) {
 };
 void ASTEvaluator::dispatch(AST::FunctionLiteral &node) {}
 void ASTEvaluator::dispatch(AST::CallExpression &node) {}
-void ASTEvaluator::dispatch(AST::ReturnStatement &node){
-
+void ASTEvaluator::dispatch(AST::ReturnStatement &node) {
+  spdlog::get(EVAL_LOGGER)->info("Evaluating return statement");
+  auto ret = eval(*node.getReturnValue());
+  if (isError(ret)) {
+    bag = ret;
+    return;
+  }
+  bag = makeReturnBag(ret);
 };
 void ASTEvaluator::dispatch(AST::ExpressionStatement &node) {
   spdlog::get(EVAL_LOGGER)
@@ -208,5 +277,5 @@ void ASTEvaluator::dispatch(AST::LetStatement &node){
 void ASTEvaluator::dispatch(AST::BlockStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating block expression");
   auto statements = node.getStatements();
-  bag = evalStatements(statements);
+  bag = evalBlockStatement(statements);
 };

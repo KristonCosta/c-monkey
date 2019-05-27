@@ -61,7 +61,6 @@ TEST_CASE("Bang eval testing", "[eval]") {
 };
 
 TEST_CASE("If else testing", "[eval]") {
-  // spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<std::optional<int64_t>> pairs[] = {
       {"if (true) { 10 }", 10},
       {"if (false) { 10 }", std::nullopt},
@@ -81,3 +80,52 @@ TEST_CASE("If else testing", "[eval]") {
     }
   }
 };
+
+TEST_CASE("Return statement testing", "[eval]") {
+  // spdlog::stdout_color_mt(EVAL_LOGGER);
+  Pair<int64_t> pairs[] = {
+      {"return 10;", 10},
+      {"return 9; 10", 9},
+      {"return 2 * 5; 20", 10},
+      {"1; return 1 * 8; 10;", 8},
+      {R"V0G0N(
+      if (10 > 2) {
+        if (true) {
+          return 10;
+        }
+        return 1;
+      })V0G0N",
+       10},
+  };
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto bag = ASTEvaluator::eval(*program);
+    testIntegerBag(bag, pair.expected);
+  }
+};
+
+TEST_CASE("Error testing", "[eval]") {
+  // spdlog::stdout_color_mt(EVAL_LOGGER);
+  Pair<std::string> pairs[] = {
+      {"5 + true;", "type mismatch: INTEGER + BOOLEAN"},
+      {"5 + true; 5;", "type mismatch: INTEGER + BOOLEAN"},
+      {"-true;", "unknown operator: -BOOLEAN"},
+      {"true + false;", "unknown operator: BOOLEAN + BOOLEAN"},
+      {"5; true + true;", "unknown operator: BOOLEAN + BOOLEAN"},
+      {"if (10 > 1) { true + false; }", "unknown operator: BOOLEAN + BOOLEAN"},
+      {R"V0G0N(
+      if (10 > 2) {
+        if (true) {
+          return true + true;
+        }
+        return 1;
+      })V0G0N",
+       "unknown operator: BOOLEAN + BOOLEAN"}
+
+  };
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto bag = ASTEvaluator::eval(*program);
+    testErrorBag(bag, pair.expected);
+  }
+}

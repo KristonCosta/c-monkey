@@ -9,6 +9,8 @@ enum class Type {
   INTEGER_OBJ,
   BOOLEAN_OBJ,
   NULL_OBJ,
+  RETURN_OBJ,
+  ERROR_OBJ,
 };
 
 class Bag {
@@ -39,7 +41,7 @@ class IntegerBag : public Bag {
     return fmt::format("{}", _value);
   };
   virtual Type type() const override { return Type::INTEGER_OBJ; };
-  int64_t value() const { return this->_value; }
+  int64_t value() const { return _value; }
 };
 
 class BooleanBag : public Bag {
@@ -52,7 +54,7 @@ class BooleanBag : public Bag {
     return fmt::format("{}", _value);
   };
   virtual Type type() const override { return Type::BOOLEAN_OBJ; };
-  int value() const { return this->_value; }
+  bool value() const { return _value; }
 };
 
 class NullBag : public Bag {
@@ -60,6 +62,32 @@ class NullBag : public Bag {
   NullBag(){};
   virtual std::string inspect() const override { return "null"; };
   virtual Type type() const override { return Type::NULL_OBJ; };
+};
+
+class ReturnBag : public Bag {
+ private:
+  std::shared_ptr<Bag> _value;
+
+ public:
+  ReturnBag(std::shared_ptr<Bag> value) : _value(value){};
+  virtual std::string inspect() const override {
+    return fmt::format("{}", _value->inspect());
+  };
+  virtual Type type() const override { return Type::RETURN_OBJ; };
+  std::shared_ptr<Bag> value() const { return _value; }
+};
+
+class ErrorBag : public Bag {
+ private:
+  std::string _message;
+
+ public:
+  ErrorBag(std::string message) : _message(message){};
+  virtual std::string inspect() const override {
+    return fmt::format("error: {}", _message);
+  };
+  virtual Type type() const override { return Type::ERROR_OBJ; };
+  std::string message() const { return _message; }
 };
 
 inline std::string typeToString(Type type) {
@@ -72,6 +100,10 @@ inline std::string typeToString(Type type) {
       return "BOOLEAN";
     case Type::NULL_OBJ:
       return "NULL";
+    case Type::RETURN_OBJ:
+      return "RETURN";
+    case Type::ERROR_OBJ:
+      return "ERROR";
   }
 }
 
@@ -95,4 +127,11 @@ inline std::shared_ptr<NullBag> convertToNull(std::shared_ptr<Bag> bag) {
   return convertType<NullBag>(bag, Type::NULL_OBJ);
 }
 
+inline std::shared_ptr<ReturnBag> convertToReturn(std::shared_ptr<Bag> bag) {
+  return convertType<ReturnBag>(bag, Type::RETURN_OBJ);
+}
+
+inline std::shared_ptr<ErrorBag> convertToError(std::shared_ptr<Bag> bag) {
+  return convertType<ErrorBag>(bag, Type::ERROR_OBJ);
+}
 }  // namespace Eval
