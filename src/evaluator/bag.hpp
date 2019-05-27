@@ -62,6 +62,19 @@ class NullBag : public Bag {
   virtual Type type() const override { return Type::NULL_OBJ; };
 };
 
+inline std::string typeToString(Type type) {
+  switch (type) {
+    case Type::BASE_OBJ:
+      return "BASE";
+    case Type::INTEGER_OBJ:
+      return "INTEGER";
+    case Type::BOOLEAN_OBJ:
+      return "BOOLEAN";
+    case Type::NULL_OBJ:
+      return "NULL";
+  }
+}
+
 template <class T>
 std::shared_ptr<T> convertType(std::shared_ptr<Bag> bag, Type type) {
   if (bag->type() == type) {
