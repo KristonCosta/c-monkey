@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 #include <eval.hpp>
 #include <lexer.hpp>
-#include <optional>
 #include <parser.hpp>
 #include <test_eval_helpers.hpp>
 #include <test_helpers.hpp>
@@ -61,23 +60,26 @@ TEST_CASE("Bang eval testing", "[eval]") {
 };
 
 TEST_CASE("If else testing", "[eval]") {
-  Pair<std::optional<int64_t>> pairs[] = {
+  Pair<int64_t> pairs[] = {
       {"if (true) { 10 }", 10},
-      {"if (false) { 10 }", std::nullopt},
+
       {"if (1) { 10}", 10},
       {"if (1 < 2) { 10 }", 10},
-      {"if (1 > 2) { 10 }", std::nullopt},
+
       {"if (1 > 2) {10} else {20}", 20},
       {"if (1 < 2) {10} else {20}", 10},
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
     auto bag = ASTEvaluator::eval(*program);
-    if (pair.expected) {
-      testIntegerBag(bag, pair.expected.value());
-    } else {
-      testNullBag(bag);
-    }
+    testIntegerBag(bag, pair.expected);
+  }
+  // Expecting nulls
+  Pair<int64_t> pairs2[] = {{"if (false) { 10 }", 1}, {"if (1 > 2) { 10 }", 1}};
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto bag = ASTEvaluator::eval(*program);
+    testNullBag(bag);
   }
 };
 
