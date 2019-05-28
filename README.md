@@ -25,5 +25,5 @@ ctest
 ```
 or 
 ```
-./tests/bin/tests
+./bin/CMonkeyTests
 ```
