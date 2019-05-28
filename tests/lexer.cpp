@@ -51,9 +51,9 @@ let result = add(five, ten);)V0G0N";
       Pair{TokenType::SEMICOLON, ";"},
       Pair{TokenType::END_OF_FILE, std::string(1, '\0')},
   };
-  auto lexer = Lexer::from(input);
+  auto lexer = Lexer(input);
   for (const Pair &pair : testPairs) {
-    auto tok = lexer->nextToken();
+    auto tok = lexer.nextToken();
     REQUIRE(tokenTypeToString(tok->type) == tokenTypeToString(pair.type));
     REQUIRE(tok->literal == pair.literal);
   }
@@ -102,9 +102,9 @@ if (5 < 10) {
       Pair{TokenType::RBRACE, "}"},
       Pair{TokenType::END_OF_FILE, std::string(1, '\0')},
   };
-  auto lexer = Lexer::from(input);
+  auto lexer = Lexer(input);
   for (const Pair &pair : testPairs) {
-    auto tok = lexer->nextToken();
+    auto tok = lexer.nextToken();
     REQUIRE(tokenTypeToString(tok->type) == tokenTypeToString(pair.type));
     REQUIRE(tok->literal == pair.literal);
   }
@@ -132,9 +132,9 @@ let seven = 7;
       Pair{TokenType::SEMICOLON, ";"},
       Pair{TokenType::END_OF_FILE, std::string(1, '\0')},
   };
-  auto lexer = Lexer::from(input);
+  auto lexer = Lexer(input);
   for (const Pair &pair : testPairs) {
-    auto tok = lexer->nextToken();
+    auto tok = lexer.nextToken();
     REQUIRE(tokenTypeToString(tok->type) == tokenTypeToString(pair.type));
     REQUIRE(tok->literal == pair.literal);
   }

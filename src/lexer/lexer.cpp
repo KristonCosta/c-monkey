@@ -17,12 +17,8 @@ Lexer::Lexer(std::string input)
   if (!spdlog::get(LEXER_LOGGER)) {
     spdlog::create<spdlog::sinks::null_sink_st>(LEXER_LOGGER);
   }
+  this->readChar();
 };
-
-std::unique_ptr<Location> Lexer::getLocation(std::uint64_t startPosition) {
-  return std::make_unique<Location>(this->currentLine,
-                                    startPosition - this->columnOffset);
-}
 
 void Lexer::readChar() {
   if (this->readPosition >= this->input.size()) {
@@ -33,6 +29,37 @@ void Lexer::readChar() {
   this->position = this->readPosition;
   this->readPosition += 1;
   spdlog::get(LEXER_LOGGER)->info("Reading character: '{}'", this->tok);
+}
+
+void Lexer::skipWhitespace() {
+  while (isspace(this->tok)) {
+    auto tok = this->tok;
+    this->readChar();
+    if (tok == '\n') {
+      this->currentLine++;
+      this->columnOffset = this->position;
+    }
+  }
+}
+
+char Lexer::peek() {
+  if (this->readPosition >= this->input.size()) {
+    return '\0';
+  } else {
+    return this->input[this->readPosition];
+  }
+}
+
+std::string Lexer::readIdentifier() {
+  auto sub = this->extactWhile([](char tok) { return isalpha(tok); });
+  spdlog::get(LEXER_LOGGER)->info("Found identifier '{}'", sub);
+  return std::move(sub);
+}
+
+std::string Lexer::readNumber() {
+  auto sub = this->extactWhile([](char tok) { return isdigit(tok); });
+  spdlog::get(LEXER_LOGGER)->info("Found number '{}'", sub);
+  return std::move(sub);
 }
 
 std::shared_ptr<Token> Lexer::nextToken() {
@@ -121,24 +148,6 @@ std::shared_ptr<Token> Lexer::nextToken() {
   return token;
 }
 
-std::unique_ptr<Lexer> Lexer::from(std::string input) {
-  auto lexer = std::make_unique<Lexer>(input);
-  lexer->readChar();
-  return lexer;
-}
-
-std::string Lexer::readIdentifier() {
-  auto sub = this->extactWhile([](char tok) { return isalpha(tok); });
-  spdlog::get(LEXER_LOGGER)->info("Found identifier '{}'", sub);
-  return std::move(sub);
-}
-
-std::string Lexer::readNumber() {
-  auto sub = this->extactWhile([](char tok) { return isdigit(tok); });
-  spdlog::get(LEXER_LOGGER)->info("Found number '{}'", sub);
-  return std::move(sub);
-}
-
 std::string Lexer::extactWhile(std::function<bool(char)> condition) {
   auto position = this->position;
   while (condition(this->tok)) {
@@ -147,21 +156,7 @@ std::string Lexer::extactWhile(std::function<bool(char)> condition) {
   return std::move(this->input.substr(position, this->position - position));
 }
 
-void Lexer::skipWhitespace() {
-  while (isspace(this->tok)) {
-    auto tok = this->tok;
-    this->readChar();
-    if (tok == '\n') {
-      this->currentLine++;
-      this->columnOffset = this->position;
-    }
-  }
-}
-
-char Lexer::peek() {
-  if (this->readPosition >= this->input.size()) {
-    return '\0';
-  } else {
-    return this->input[this->readPosition];
-  }
+std::unique_ptr<Location> Lexer::getLocation(std::uint64_t startPosition) {
+  return std::make_unique<Location>(this->currentLine,
+                                    startPosition - this->columnOffset);
 }

@@ -165,6 +165,9 @@ TEST_CASE("Function eval testing", "[eval]") {
       {"let newAdder = fn(x) { fn(y) { x + y }; }; let addTwo = newAdder(2); "
        "addTwo(10);",
        12},
+      {"let add = fn(x, y) { x + y }; let sub = fn(x, y) {x - y}; let "
+       "applyFunc = fn(a, b, func) { func(a, b) }; applyFunc(2, 2, add);",
+       4}
 
   };
 

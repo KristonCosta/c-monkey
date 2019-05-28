@@ -1,4 +1,4 @@
-project(CMonkeyCommon) 
+project(CMonkeyToken) 
 
 add_library(${PROJECT_NAME} 
 	token.cpp) 

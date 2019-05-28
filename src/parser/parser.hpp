@@ -33,7 +33,7 @@ class Parser {
   std::unique_ptr<Lexer> lexer;
   std::shared_ptr<Token> currentToken;
   std::shared_ptr<Token> peekToken;
-  std::list<std::shared_ptr<ParserError>> _errors;
+  std::list<ParserError> _errors;
 
   std::map<TokenType, PrefixParseFunction> prefixParseFunctions;
   std::map<TokenType, InfixParseFunction> infixParseFunctions;
@@ -107,7 +107,7 @@ class Parser {
   Precedence currentPrecedence();
 
   void addError(std::shared_ptr<Token> token, std::string message) {
-    this->_errors.push_back(std::make_shared<ParserError>(token, message));
+    this->_errors.push_back(ParserError(token, message));
   }
 
  public:
@@ -115,41 +115,36 @@ class Parser {
     if (!spdlog::get(PARSER_LOGGER)) {
       spdlog::create<spdlog::sinks::null_sink_st>(PARSER_LOGGER);
     }
+    this->nextToken();
+    this->nextToken();
+    initRegisterMaps();
   }
 
-  static std::unique_ptr<Parser> from(std::unique_ptr<Lexer> lexer) {
-    auto parser = std::make_unique<Parser>(std::move(lexer));
+  void initRegisterMaps() {
+    this->registerPrefix(TokenType::IDENT, &Parser::parseIdentifier);
+    this->registerPrefix(TokenType::INTEGER, &Parser::parseIntegerLiteral);
+    this->registerPrefix(TokenType::BANG, &Parser::parsePrefixExpression);
+    this->registerPrefix(TokenType::MINUS, &Parser::parsePrefixExpression);
+    this->registerPrefix(TokenType::TRUE, &Parser::parseBoolean);
+    this->registerPrefix(TokenType::FALSE, &Parser::parseBoolean);
+    this->registerPrefix(TokenType::LPAREN, &Parser::parseGroupedExpression);
+    this->registerPrefix(TokenType::IF, &Parser::parseIfExpression);
+    this->registerPrefix(TokenType::FUNCTION, &Parser::parseFunctionLiteral);
 
-    parser->nextToken();
-    parser->nextToken();
-
-    parser->registerPrefix(TokenType::IDENT, &Parser::parseIdentifier);
-    parser->registerPrefix(TokenType::INTEGER, &Parser::parseIntegerLiteral);
-    parser->registerPrefix(TokenType::BANG, &Parser::parsePrefixExpression);
-    parser->registerPrefix(TokenType::MINUS, &Parser::parsePrefixExpression);
-    parser->registerPrefix(TokenType::TRUE, &Parser::parseBoolean);
-    parser->registerPrefix(TokenType::FALSE, &Parser::parseBoolean);
-    parser->registerPrefix(TokenType::LPAREN, &Parser::parseGroupedExpression);
-    parser->registerPrefix(TokenType::IF, &Parser::parseIfExpression);
-    parser->registerPrefix(TokenType::FUNCTION, &Parser::parseFunctionLiteral);
-
-    parser->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::SLASH, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::ASTERISK, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::EQ, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::NE, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::LT, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::GT, &Parser::parseInfixExpression);
-    parser->registerInfix(TokenType::LPAREN, &Parser::parseCallExpression);
-    return std::move(parser);
+    this->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::SLASH, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::ASTERISK, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::EQ, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::NE, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::LT, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::GT, &Parser::parseInfixExpression);
+    this->registerInfix(TokenType::LPAREN, &Parser::parseCallExpression);
   }
 
   std::unique_ptr<AST::Program> parseProgram();
 
-  const std::list<std::shared_ptr<ParserError>> &errors() {
-    return this->_errors;
-  }
+  const std::list<ParserError> &errors() { return this->_errors; }
 
   void registerPrefix(TokenType type, PrefixParseFunction func) {
     this->prefixParseFunctions.insert(
