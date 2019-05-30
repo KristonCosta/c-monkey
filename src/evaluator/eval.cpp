@@ -233,6 +233,10 @@ void ASTEvaluator::dispatch(AST::IntegerLiteral &node) {
       ->info("Creating integer literal {}", node.getValue());
   bag = std::make_shared<Eval::IntegerBag>(node.getValue());
 };
+void ASTEvaluator::dispatch(AST::StringLiteral &node) {
+  spdlog::get(EVAL_LOGGER)->info("Creating string literal {}", node.getValue());
+  bag = std::make_shared<Eval::StringBag>(node.getValue());
+};
 void ASTEvaluator::dispatch(AST::PrefixExpression &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating prefix expression {}", node.getOp());

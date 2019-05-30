@@ -237,6 +237,15 @@ TEST_CASE("Call expression testing", "[parser]") {
   testIntegerLiteral(expr2->getLeft(), "4", 4);
   testIntegerLiteral(expr2->getRight(), "5", 5);
 }
+
+TEST_CASE("String parsing", "[parser]") {
+  auto input = "let x = \"test 123\";";
+  auto program = testProgramWithInput(input);
+  REQUIRE(program->size() == 1);
+  const auto statement =
+      testLetStatement(program->getStatements().begin()->get(), "x");
+  testString(statement->getValue(), "test 123");
+}
 /*
 future
       {"a * [1, 2, 3, 4][b * c] * d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"},

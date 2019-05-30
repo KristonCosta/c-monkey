@@ -19,6 +19,7 @@ class Lexer {
   char peek();
   std::string readIdentifier();
   std::string readNumber();
+  std::string readString();
   std::unique_ptr<Location> getLocation(std::uint64_t startPosition);
   std::string extactWhile(std::function<bool(char)> condition);
 

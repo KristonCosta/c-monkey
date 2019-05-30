@@ -62,6 +62,13 @@ std::string Lexer::readNumber() {
   return std::move(sub);
 }
 
+std::string Lexer::readString() {
+  auto sub =
+      this->extactWhile([](char tok) { return (tok != '\0' && tok != '"'); });
+  spdlog::get(LEXER_LOGGER)->info("Found string '{}'", sub);
+  return std::move(sub);
+}
+
 std::shared_ptr<Token> Lexer::nextToken() {
   spdlog::get(LEXER_LOGGER)->info("Getting next token '{}'", this->tok);
   this->skipWhitespace();
@@ -124,6 +131,11 @@ std::shared_ptr<Token> Lexer::nextToken() {
       break;
     case '>':
       type = TokenType::GT;
+      break;
+    case '"':
+      this->readChar();
+      literal = this->readString();
+      type = TokenType::STRING;
       break;
     case '\0':
       type = TokenType::END_OF_FILE;

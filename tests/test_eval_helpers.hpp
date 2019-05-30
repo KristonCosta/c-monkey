@@ -17,6 +17,15 @@ inline Eval::IntegerBag *testIntegerBag(std::shared_ptr<Eval::Bag> bag,
   return ret.get();
 }
 
+inline Eval::StringBag *testStringBag(std::shared_ptr<Eval::Bag> bag,
+                                      std::string value) {
+  REQUIRE(bag);
+  REQUIRE(bag->type() == Eval::Type::STRING_OBJ);
+  auto ret = std::static_pointer_cast<Eval::StringBag>(bag);
+  REQUIRE(ret->value() == value);
+  return ret.get();
+}
+
 inline Eval::BooleanBag *testBooleanBag(std::shared_ptr<Eval::Bag> bag,
                                         bool value) {
   REQUIRE(bag);

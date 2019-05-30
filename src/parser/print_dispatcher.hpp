@@ -35,6 +35,9 @@ class ASTPrinter : public AST::AbstractDispatcher {
   virtual void dispatch(AST::IntegerLiteral &node) override {
     writer(node.tokenLiteral());
   };
+  virtual void dispatch(AST::StringLiteral &node) override {
+    writer(node.tokenLiteral());
+  }
   virtual void dispatch(AST::PrefixExpression &node) override {
     writer("(");
     writer(node.getOp());

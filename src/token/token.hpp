@@ -9,6 +9,7 @@ enum class TokenType : std::uint8_t {
   // Identifiers and literals
   IDENT = 0x10,
   INTEGER = 0x11,
+  STRING = 0x12,
 
   // Ops
   ASSIGN = 0x20,

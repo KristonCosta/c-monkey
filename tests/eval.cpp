@@ -154,6 +154,20 @@ TEST_CASE("Let statement testing", "[eval]") {
   }
 }
 
+TEST_CASE("String eval testing", "[eval]") {
+  //  spdlog::stdout_color_mt(EVAL_LOGGER);
+  Pair<std::string> pairs[] = {
+      {"let a = \"test123\"; a;", "test123"},
+      {"\"a blank and multilength string\";", "a blank and multilength string"},
+  };
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
+    testStringBag(bag, pair.expected);
+  }
+}
+
 TEST_CASE("Function eval testing", "[eval]") {
   //  spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<int64_t> pairs[] = {

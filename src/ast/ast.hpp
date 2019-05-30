@@ -16,6 +16,7 @@ class Program;
 
 class Identifier;
 class IntegerLiteral;
+class StringLiteral;
 class Boolean;
 class PrefixExpression;
 class InfixExpression;
@@ -38,6 +39,7 @@ class AbstractDispatcher {
 
   virtual void dispatch(Identifier &node) = 0;
   virtual void dispatch(IntegerLiteral &node) = 0;
+  virtual void dispatch(StringLiteral &node) = 0;
   virtual void dispatch(Boolean &node) = 0;
   virtual void dispatch(PrefixExpression &node) = 0;
   virtual void dispatch(InfixExpression &node) = 0;
@@ -145,6 +147,23 @@ class IntegerLiteral : public Expression {
   }
 
   const int64_t getValue();
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+class StringLiteral : public Expression {
+ private:
+  std::string value;
+
+ public:
+  StringLiteral(std::shared_ptr<Token> token, std::string value)
+      : value(value) {
+    this->token = token;
+  }
+
+  const std::string getValue();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);

@@ -169,6 +169,13 @@ std::shared_ptr<AST::Expression> Parser::parseIdentifier() {
                                            this->currentToken->literal);
 }
 
+std::shared_ptr<AST::Expression> Parser::parseString() {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing string for {} ", *this->currentToken);
+  return std::make_shared<AST::StringLiteral>(this->currentToken,
+                                              this->currentToken->literal);
+}
+
 std::shared_ptr<AST::Expression> Parser::parseIntegerLiteral() {
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing integer literal for {} ", *this->currentToken);

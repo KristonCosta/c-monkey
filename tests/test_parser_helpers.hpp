@@ -64,6 +64,22 @@ inline AST::Boolean *testBoolean(AST::Expression *node, bool expect) {
   return statement;
 }
 
+inline AST::StringLiteral *testString(std::shared_ptr<AST::Expression> node,
+                                      std::string expect) {
+  const auto statement = dynamic_cast<AST::StringLiteral *>(node.get());
+  REQUIRE(statement);
+  REQUIRE(statement->getValue() == expect);
+  return statement;
+}
+
+inline AST::StringLiteral *testString(AST::Expression *node,
+                                      std::string expect) {
+  const auto statement = dynamic_cast<AST::StringLiteral *>(node);
+  REQUIRE(statement);
+  REQUIRE(statement->getValue() == expect);
+  return statement;
+}
+
 inline AST::IfExpression *testIfExpression(
     std::shared_ptr<AST::Expression> node) {
   const auto statement = dynamic_cast<AST::IfExpression *>(node.get());

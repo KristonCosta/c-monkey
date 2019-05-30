@@ -73,6 +73,18 @@ std::string IntegerLiteral::toDebugString() const {
   return ss.str();
 };
 
+const std::string StringLiteral::getValue() { return this->value; };
+
+std::string StringLiteral::toDebugString() const {
+  std::stringstream ss;
+  ss << "[string";
+  if (this->token) {
+    ss << " token=" << *this->token;
+  }
+  ss << " value=" << this->value << "]";
+  return ss.str();
+};
+
 const bool Boolean::getValue() { return this->value; };
 
 std::string Boolean::toDebugString() const {

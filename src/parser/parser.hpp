@@ -51,6 +51,7 @@ class Parser {
 
   std::shared_ptr<AST::Expression> parseExpression(Precedence);
   std::shared_ptr<AST::Expression> parseIdentifier();
+  std::shared_ptr<AST::Expression> parseString();
   std::shared_ptr<AST::Expression> parseIntegerLiteral();
   std::shared_ptr<AST::Expression> parseBoolean();
   std::shared_ptr<AST::Expression> parsePrefixExpression();
@@ -130,6 +131,7 @@ class Parser {
     this->registerPrefix(TokenType::LPAREN, &Parser::parseGroupedExpression);
     this->registerPrefix(TokenType::IF, &Parser::parseIfExpression);
     this->registerPrefix(TokenType::FUNCTION, &Parser::parseFunctionLiteral);
+    this->registerPrefix(TokenType::STRING, &Parser::parseString);
 
     this->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
     this->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);

@@ -16,6 +16,7 @@ enum class Type {
   BASE_OBJ,
   // basic
   INTEGER_OBJ,
+  STRING_OBJ,
   BOOLEAN_OBJ,
   NULL_OBJ,
   ERROR_OBJ,
@@ -30,6 +31,8 @@ inline std::string typeToString(Type type) {
       return "BASE";
     case Type::INTEGER_OBJ:
       return "INTEGER";
+    case Type::STRING_OBJ:
+      return "STRING";
     case Type::BOOLEAN_OBJ:
       return "BOOLEAN";
     case Type::NULL_OBJ:
@@ -70,6 +73,19 @@ class IntegerBag : public Bag {
   };
   virtual Type type() const override { return Type::INTEGER_OBJ; };
   int64_t value() const { return _value; }
+};
+
+class StringBag : public Bag {
+ private:
+  std::string _value;
+
+ public:
+  StringBag(std::string value) : _value(value){};
+  virtual std::string inspect() const override {
+    return fmt::format("{}", _value);
+  };
+  virtual Type type() const override { return Type::STRING_OBJ; };
+  std::string value() const { return _value; }
 };
 
 class BooleanBag : public Bag {
