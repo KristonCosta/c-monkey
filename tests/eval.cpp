@@ -40,6 +40,9 @@ TEST_CASE("Boolean eval testing", "[eval]") {
       {"false == false", true},
       {"(1 < 10) == true", true},
       {"(1 + 10) < 10 == true", false},
+      {"let x = \"comp\"; x == \"comp\"", true},
+      {"let x = \"com p\"; x == \"comp\"", false},
+      {"let x = \" p\"; x != \"whatisthis\"", true},
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
@@ -159,6 +162,8 @@ TEST_CASE("String eval testing", "[eval]") {
   Pair<std::string> pairs[] = {
       {"let a = \"test123\"; a;", "test123"},
       {"\"a blank and multilength string\";", "a blank and multilength string"},
+      {"\"lets\" + \" test\"", "lets test"},
+      {"let x = \"com p\"; x;", "com p"},
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
