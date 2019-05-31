@@ -18,7 +18,7 @@ inline Eval::IntegerBag *testIntegerBag(std::shared_ptr<Eval::Bag> bag,
 }
 
 inline Eval::StringBag *testStringBag(std::shared_ptr<Eval::Bag> bag,
-                                      std::string value) {
+                                      const std::string &value) {
   REQUIRE(bag);
   REQUIRE(bag->type() == Eval::Type::STRING_OBJ);
   auto ret = std::static_pointer_cast<Eval::StringBag>(bag);
@@ -40,7 +40,8 @@ inline void testNullBag(std::shared_ptr<Eval::Bag> bag) {
   REQUIRE(bag->type() == Eval::Type::NULL_OBJ);
 }
 
-inline void testErrorBag(std::shared_ptr<Eval::Bag> bag, std::string message) {
+inline void testErrorBag(std::shared_ptr<Eval::Bag> bag,
+                         const std::string &message) {
   REQUIRE(bag);
   REQUIRE(bag->type() == Eval::Type::ERROR_OBJ);
   auto ret = std::static_pointer_cast<Eval::ErrorBag>(bag);

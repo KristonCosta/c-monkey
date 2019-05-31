@@ -27,7 +27,7 @@ void Program::addStatement(std::shared_ptr<Statement> statement) {
 };
 
 std::string Program::tokenLiteral() const {
-  if (this->statements.size() > 0) {
+  if (!this->statements.empty()) {
     return this->statements.front()->tokenLiteral();
   }
   return "";

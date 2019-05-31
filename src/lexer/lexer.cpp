@@ -7,7 +7,7 @@
 #include <functional>
 #include <iostream>
 
-Lexer::Lexer(std::string input)
+Lexer::Lexer(const std::string& input)
     : input(std::move(input)),
       position(0),
       readPosition(0),

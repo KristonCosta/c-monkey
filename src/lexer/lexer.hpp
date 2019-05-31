@@ -24,6 +24,6 @@ class Lexer {
   std::string extactWhile(std::function<bool(char)> condition);
 
  public:
-  explicit Lexer(std::string input);
+  explicit Lexer(const std::string &input);
   std::shared_ptr<Token> nextToken();
 };
