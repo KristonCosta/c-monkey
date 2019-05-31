@@ -209,6 +209,10 @@ inline std::shared_ptr<ErrorBag> convertToError(std::shared_ptr<Bag> bag) {
   return convertType<ErrorBag>(bag, Type::ERROR_OBJ);
 }
 
+inline std::shared_ptr<StringBag> convertToString(std::shared_ptr<Bag> bag) {
+  return convertType<StringBag>(bag, Type::STRING_OBJ);
+}
+
 inline std::shared_ptr<FunctionBag> convertToFunction(
     std::shared_ptr<Bag> bag) {
   return convertType<FunctionBag>(bag, Type::FUNC_OBJ);

@@ -25,6 +25,10 @@ std::shared_ptr<Eval::ReturnBag> makeReturnBag(
   return std::make_shared<Eval::ReturnBag>(value);
 }
 
+std::shared_ptr<Eval::StringBag> makeStringBag(std::string value) {
+  return std::make_shared<Eval::StringBag>(value);
+}
+
 std::shared_ptr<Eval::FunctionBag> makeFunctionBag(
     std::shared_ptr<Env::Environment> env,
     std::list<std::shared_ptr<AST::Identifier>> arguments,
@@ -106,6 +110,19 @@ std::shared_ptr<Eval::Bag> evalBooleanInfixExpression(
   return makeInfixUnknownOperatorError(left->type(), right->type(), op);
 }
 
+std::shared_ptr<Eval::Bag> evalStringInfixExpression(
+    std::string op, std::shared_ptr<Eval::StringBag> left,
+    std::shared_ptr<Eval::StringBag> right) {
+  if (op == "+") {
+    return makeStringBag(left->value() + right->value());
+  } else if (op == "==") {
+    return getBooleanBag(left->value() == right->value());
+  } else if (op == "!=") {
+    return getBooleanBag(left->value() != right->value());
+  }
+  return makeInfixUnknownOperatorError(left->type(), right->type(), op);
+}
+
 std::shared_ptr<Eval::Bag> evalInfixExpression(
     std::string op, std::shared_ptr<Eval::Bag> left,
     std::shared_ptr<Eval::Bag> right) {
@@ -121,6 +138,13 @@ std::shared_ptr<Eval::Bag> evalInfixExpression(
       if (right->type() == Eval::Type::BOOLEAN_OBJ) {
         return evalBooleanInfixExpression(op, convertToBoolean(left),
                                           convertToBoolean(right));
+      }
+      break;
+    }
+    case Eval::Type::STRING_OBJ: {
+      if (right->type() == Eval::Type::STRING_OBJ) {
+        return evalStringInfixExpression(op, convertToString(left),
+                                         convertToString(right));
       }
       break;
     }
