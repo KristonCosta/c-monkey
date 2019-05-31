@@ -9,7 +9,7 @@ Token::Token(std::unique_ptr<Location> location, TokenType type, char token)
       literal(std::string(1, token)) {}
 
 Token::Token(std::unique_ptr<Location> location, TokenType type,
-             std::string literal)
+             const std::string literal)
     : location(std::move(location)), type(type), literal(std::move(literal)) {}
 
 std::map<std::string, TokenType> keywords = {

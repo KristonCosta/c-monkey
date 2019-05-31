@@ -8,7 +8,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 
 inline AST::IntegerLiteral *testIntegerLiteral(
-    std::shared_ptr<AST::Expression> node, std::string str, int num) {
+    std::shared_ptr<AST::Expression> node, const std::string str, int num) {
   const auto expression = dynamic_cast<AST::IntegerLiteral *>(node.get());
   REQUIRE(expression);
   REQUIRE(expression->getValue() == num);
@@ -17,7 +17,7 @@ inline AST::IntegerLiteral *testIntegerLiteral(
 }
 
 inline AST::IntegerLiteral *testIntegerLiteral(AST::Expression *node,
-                                               std::string str, int num) {
+                                               const std::string str, int num) {
   const auto expression = dynamic_cast<AST::IntegerLiteral *>(node);
   REQUIRE(expression);
   REQUIRE(expression->getValue() == num);
@@ -26,7 +26,7 @@ inline AST::IntegerLiteral *testIntegerLiteral(AST::Expression *node,
 }
 
 inline AST::LetStatement *testLetStatement(AST::Statement *node,
-                                           std::string str) {
+                                           const std::string str) {
   REQUIRE(node->tokenLiteral() == "let");
   const auto statement = dynamic_cast<AST::LetStatement *>(node);
   REQUIRE(statement);
@@ -65,7 +65,7 @@ inline AST::Boolean *testBoolean(AST::Expression *node, bool expect) {
 }
 
 inline AST::StringLiteral *testString(std::shared_ptr<AST::Expression> node,
-                                      std::string expect) {
+                                      const std::string expect) {
   const auto statement = dynamic_cast<AST::StringLiteral *>(node.get());
   REQUIRE(statement);
   REQUIRE(statement->getValue() == expect);
@@ -73,7 +73,7 @@ inline AST::StringLiteral *testString(std::shared_ptr<AST::Expression> node,
 }
 
 inline AST::StringLiteral *testString(AST::Expression *node,
-                                      std::string expect) {
+                                      const std::string expect) {
   const auto statement = dynamic_cast<AST::StringLiteral *>(node);
   REQUIRE(statement);
   REQUIRE(statement->getValue() == expect);
@@ -107,7 +107,7 @@ inline AST::FunctionLiteral *testFunctionLiteral(AST::Expression *node) {
 }
 
 inline AST::Identifier *testIdentifier(std::shared_ptr<AST::Expression> node,
-                                       std::string val) {
+                                       const std::string val) {
   const auto expression = dynamic_cast<AST::Identifier *>(node.get());
   REQUIRE(expression);
   REQUIRE(expression->getValue() == val);
@@ -115,7 +115,8 @@ inline AST::Identifier *testIdentifier(std::shared_ptr<AST::Expression> node,
   return expression;
 }
 
-inline AST::Identifier *testIdentifier(AST::Expression *node, std::string val) {
+inline AST::Identifier *testIdentifier(AST::Expression *node,
+                                       const std::string val) {
   const auto expression = dynamic_cast<AST::Identifier *>(node);
   REQUIRE(expression);
   REQUIRE(expression->getValue() == val);
@@ -124,7 +125,7 @@ inline AST::Identifier *testIdentifier(AST::Expression *node, std::string val) {
 }
 
 inline AST::InfixExpression *testInfixExpression(AST::Expression *node,
-                                                 std::string op) {
+                                                 const std::string op) {
   const auto expression = dynamic_cast<AST::InfixExpression *>(node);
   REQUIRE(expression);
   REQUIRE(expression->getOp() == op);
@@ -132,7 +133,7 @@ inline AST::InfixExpression *testInfixExpression(AST::Expression *node,
 }
 
 inline AST::InfixExpression *testInfixExpression(
-    std::shared_ptr<AST::Expression> node, std::string op) {
+    std::shared_ptr<AST::Expression> node, const std::string op) {
   const auto expression = dynamic_cast<AST::InfixExpression *>(node.get());
   REQUIRE(expression);
   REQUIRE(expression->getOp() == op);
@@ -140,14 +141,14 @@ inline AST::InfixExpression *testInfixExpression(
 }
 
 inline AST::CallExpression *testCallExpression(AST::Expression *node,
-                                               std::string name) {
+                                               const std::string name) {
   const auto expression = dynamic_cast<AST::CallExpression *>(node);
   REQUIRE(expression);
   return expression;
 }
 
 inline AST::CallExpression *testCallExpression(
-    std::shared_ptr<AST::Expression> node, std::string name) {
+    std::shared_ptr<AST::Expression> node, const std::string name) {
   const auto expression = dynamic_cast<AST::CallExpression *>(node.get());
   REQUIRE(expression);
   testIdentifier(expression->getFunction(), name);
@@ -155,7 +156,7 @@ inline AST::CallExpression *testCallExpression(
 }
 
 inline AST::PrefixExpression *testPrefixExpression(
-    std::shared_ptr<AST::Expression> node, std::string op) {
+    std::shared_ptr<AST::Expression> node, const std::string op) {
   const auto expression = dynamic_cast<AST::PrefixExpression *>(node.get());
   REQUIRE(expression);
   REQUIRE(expression->getOp() == op);
@@ -163,7 +164,7 @@ inline AST::PrefixExpression *testPrefixExpression(
 }
 
 inline AST::PrefixExpression *testPrefixExpression(AST::Expression *node,
-                                                   std::string op) {
+                                                   const std::string op) {
   const auto expression = dynamic_cast<AST::PrefixExpression *>(node);
   REQUIRE(expression);
   REQUIRE(expression->getOp() == op);

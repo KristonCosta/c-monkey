@@ -1,5 +1,4 @@
-from conans import ConanFile, CMake, tools, errors
-from conans.client.conan_api import ConanAPIV1
+from conans import ConanFile, CMake, tools
 
 class FPSGymConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"

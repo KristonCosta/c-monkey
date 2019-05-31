@@ -77,7 +77,7 @@ std::shared_ptr<Eval::Bag> evalNegateOperator(
 }
 
 std::shared_ptr<Eval::Bag> evalIntegerInfixExpression(
-    std::string op, std::shared_ptr<Eval::IntegerBag> left,
+    const std::string op, std::shared_ptr<Eval::IntegerBag> left,
     std::shared_ptr<Eval::IntegerBag> right) {
   if (op == "+") {
     return makeIntegerBag(left->value() + right->value());
@@ -100,7 +100,7 @@ std::shared_ptr<Eval::Bag> evalIntegerInfixExpression(
 }
 
 std::shared_ptr<Eval::Bag> evalBooleanInfixExpression(
-    std::string op, std::shared_ptr<Eval::BooleanBag> left,
+    const std::string op, std::shared_ptr<Eval::BooleanBag> left,
     std::shared_ptr<Eval::BooleanBag> right) {
   if (op == "==") {
     return getBooleanBag(left->value() == right->value());

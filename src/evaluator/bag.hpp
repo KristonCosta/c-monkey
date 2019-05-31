@@ -80,7 +80,7 @@ class StringBag : public Bag {
   std::string _value;
 
  public:
-  StringBag(std::string value) : _value(value){};
+  StringBag(const std::string value) : _value(value){};
   virtual std::string inspect() const override {
     return fmt::format("{}", _value);
   };
@@ -106,7 +106,7 @@ class ErrorBag : public Bag {
   std::string _message;
 
  public:
-  ErrorBag(std::string message) : _message(message){};
+  ErrorBag(const std::string message) : _message(message){};
   virtual std::string inspect() const override {
     return fmt::format("error: {}", _message);
   };

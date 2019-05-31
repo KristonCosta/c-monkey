@@ -126,7 +126,8 @@ class Identifier : public Expression {
   std::string value;
 
  public:
-  Identifier(std::shared_ptr<Token> token, std::string value) : value(value) {
+  Identifier(std::shared_ptr<Token> token, const std::string value)
+      : value(value) {
     this->token = token;
   }
 
@@ -158,7 +159,7 @@ class StringLiteral : public Expression {
   std::string value;
 
  public:
-  StringLiteral(std::shared_ptr<Token> token, std::string value)
+  StringLiteral(std::shared_ptr<Token> token, const std::string value)
       : value(value) {
     this->token = token;
   }
@@ -364,7 +365,9 @@ class BlockStatement : public Statement {
   std::list<std::shared_ptr<Statement>> statements;
 
  public:
-  BlockStatement(std::shared_ptr<Token> token) { this->token = token; };
+  explicit BlockStatement(std::shared_ptr<Token> token) {
+    this->token = token;
+  };
   const std::list<std::shared_ptr<Statement>> &getStatements() const;
   const uint64_t size();
   void addStatement(std::shared_ptr<Statement> statement);

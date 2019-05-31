@@ -14,7 +14,7 @@ class Environment {
 
  public:
   Environment() : _env(nullptr){};
-  Environment(std::shared_ptr<Environment> env) : _env(env){};
+  explicit Environment(std::shared_ptr<Environment> env) : _env(env){};
   Environment(std::shared_ptr<Environment> env,
               std::map<std::string, std::shared_ptr<Eval::Bag>> &refs)
       : _env(env) {
