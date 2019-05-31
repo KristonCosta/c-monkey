@@ -37,3 +37,23 @@ inline std::shared_ptr<Eval::ErrorBag> makeNotAFunctionError(
     std::string identifier) {
   return makeErrorWithMessage(fmt::format("not a function: {}", identifier));
 }
+
+inline std::shared_ptr<Eval::ErrorBag> makeBuiltinWithNameExists(
+    std::string identifier) {
+  return makeErrorWithMessage(
+      fmt::format("builtin name collision: {}", identifier));
+}
+
+inline std::shared_ptr<Eval::ErrorBag> makeBuiltinInvalidArgument(
+    std::string identifier, Eval::Type type) {
+  return makeErrorWithMessage(
+      fmt::format("argument to `{}` not supported, got {}", identifier,
+                  Eval::typeToString(type)));
+}
+
+inline std::shared_ptr<Eval::ErrorBag> makeBuiltinInvalidNumberOfArguments(
+    std::string identifier, int expected, int actual) {
+  return makeErrorWithMessage(
+      fmt::format("wrong number of arguments to `{}`: expected {}, found {}",
+                  identifier, expected, actual));
+}

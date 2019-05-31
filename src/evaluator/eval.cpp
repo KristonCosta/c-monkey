@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include "ast.hpp"
+#include "builtin.hpp"
 #include "spdlog/sinks/null_sink.h"
 
 const std::shared_ptr<Eval::BooleanBag> TRUE_BAG =
@@ -224,6 +225,42 @@ std::shared_ptr<Eval::Bag> evalBlockStatement(
   return bag;
 }
 
+std::shared_ptr<Eval::Bag> applyFunction(
+    AST::CallExpression &node, std::shared_ptr<Eval::Bag> val,
+    std::shared_ptr<Env::Environment> env) {
+  if (val->type() == Eval::Type::FUNC_OBJ) {
+    auto func = Eval::convertToFunction(val);
+    std::map<std::string, std::shared_ptr<Eval::Bag>> args;
+    auto identIter = func->arguments().begin();
+    for (const auto &arg : node.getArguments()) {
+      auto evalArg = ASTEvaluator::eval(*arg, env);
+      if (isError(evalArg)) {
+        return evalArg;
+      }
+      args[identIter->get()->getValue()] = evalArg;
+      identIter++;
+    }
+    auto wrappedEnv = std::make_shared<Env::Environment>(func->env(), args);
+    auto ret = ASTEvaluator::eval(*func->body(), wrappedEnv);
+    if (ret->type() == Eval::Type::RETURN_OBJ) {
+      return convertToReturn(ret)->value();
+    }
+    return ret;
+  } else if (val->type() == Eval::Type::BUILTIN_OBJ) {
+    auto func = Eval::convertToBuiltin(val);
+    std::list<std::shared_ptr<Eval::Bag>> args;
+    for (const auto &arg : node.getArguments()) {
+      auto evalArg = ASTEvaluator::eval(*arg, env);
+      if (isError(evalArg)) {
+        return evalArg;
+      }
+      args.push_back(evalArg);
+    }
+    return func->exec(args);
+  }
+  return makeNotAFunctionError(node.getFunction()->tokenLiteral());
+}
+
 void ASTEvaluator::dispatch(AST::Node &node){
 
 };
@@ -245,6 +282,10 @@ void ASTEvaluator::dispatch(AST::Identifier &node) {
   if (val) {
     bag = val;
   } else {
+    if (Builtin::contains(node.getValue())) {
+      bag = Builtin::get(node.getValue());
+      return;
+    }
     bag = makeIdentifierNotFoundError(node.getValue());
   }
 };
@@ -293,6 +334,7 @@ void ASTEvaluator::dispatch(AST::InfixExpression &node) {
     bag = right;
     return;
   }
+
   bag = evalInfixExpression(node.getOp(), left, right);
   spdlog::get(EVAL_LOGGER)
       ->info("Returning infix statement {}", bag->inspect());
@@ -311,27 +353,7 @@ void ASTEvaluator::dispatch(AST::CallExpression &node) {
     bag = val;
     return;
   }
-  if (val->type() != Eval::Type::FUNC_OBJ) {
-    bag = makeNotAFunctionError(node.getFunction()->tokenLiteral());
-    return;
-  }
-  auto func = Eval::convertToFunction(val);
-  std::map<std::string, std::shared_ptr<Eval::Bag>> args;
-  auto identIter = func->arguments().begin();
-  for (const auto &arg : node.getArguments()) {
-    auto evalArg = eval(*arg, env);
-    if (isError(evalArg)) {
-      bag = evalArg;
-      return;
-    }
-    args[identIter->get()->getValue()] = evalArg;
-    identIter++;
-  }
-  auto wrappedEnv = std::make_shared<Env::Environment>(func->env(), args);
-  bag = eval(*func->body(), wrappedEnv);
-  if (bag->type() == Eval::Type::RETURN_OBJ) {
-    bag = convertToReturn(bag)->value();
-  }
+  bag = applyFunction(node, val, env);
 }
 void ASTEvaluator::dispatch(AST::ReturnStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating return statement");
@@ -349,13 +371,17 @@ void ASTEvaluator::dispatch(AST::ExpressionStatement &node) {
 };
 void ASTEvaluator::dispatch(AST::LetStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating let statement");
+  if (Builtin::contains(node.getName()->getValue())) {
+    bag = Builtin::get(node.getName()->getValue());
+    return;
+  }
   auto val = eval(*node.getValue(), env);
   if (isError(val)) {
     bag = val;
     return;
   }
 
-  spdlog::get(EVAL_LOGGER)->info("Setting let statemen {}", env);
+  spdlog::get(EVAL_LOGGER)->info("Setting let statement {}", env);
   env->set(node.getName()->getValue(), val);
   spdlog::get(EVAL_LOGGER)->info("Set let statement");
 

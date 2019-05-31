@@ -130,8 +130,11 @@ TEST_CASE("Error testing", "[eval]") {
         }
         return 1;
       })V0G0N",
-       "unknown operator: BOOLEAN + BOOLEAN"}
-
+       "unknown operator: BOOLEAN + BOOLEAN"},
+      {"\"test\" - \"test\"", "unknown operator: STRING - STRING"},
+      {"len(1)", "argument to `len` not supported, got INTEGER"},
+      {"len(\"one\", \"two\")",
+       "wrong number of arguments to `len`: expected 1, found 2"},
   };
   for (const auto& pair : pairs) {
     auto program = testProgramWithInput(pair.input);
@@ -186,8 +189,10 @@ TEST_CASE("Function eval testing", "[eval]") {
        12},
       {"let add = fn(x, y) { x + y }; let sub = fn(x, y) {x - y}; let "
        "applyFunc = fn(a, b, func) { func(a, b) }; applyFunc(2, 2, add);",
-       4}
-
+       4},
+      {"len(\"123\")", 3},
+      {"len(\"\")", 0},
+      {"len(\"hello\" + \" world!\")", 12},
   };
 
   for (const auto& pair : pairs) {

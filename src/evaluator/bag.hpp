@@ -23,6 +23,7 @@ enum class Type {
   // complex
   FUNC_OBJ,
   RETURN_OBJ,
+  BUILTIN_OBJ,
 };
 
 inline std::string typeToString(Type type) {
@@ -43,6 +44,8 @@ inline std::string typeToString(Type type) {
       return "ERROR";
     case Type::FUNC_OBJ:
       return "FUNCTION";
+    case Type::BUILTIN_OBJ:
+      return "BUILTIN";
   }
 }
 
@@ -56,6 +59,10 @@ class Bag {
   virtual std::string inspect() const = 0;
   virtual Type type() const = 0;
 };
+
+typedef std::function<std::shared_ptr<Bag>(
+    const std::string& name, const std::list<std::shared_ptr<Bag>>& arguments)>
+    BuiltinFunction;
 
 /*
 
@@ -139,6 +146,22 @@ class ReturnBag : public Bag {
   std::shared_ptr<Bag> value() const { return _value; }
 };
 
+class BuiltinBag : public Bag {
+ private:
+  std::string _name;
+  BuiltinFunction _fn;
+
+ public:
+  explicit BuiltinBag(const std::string& name, BuiltinFunction fn)
+      : _name(name), _fn(fn){};
+  virtual std::string inspect() const override { return _name; };
+  virtual Type type() const override { return Type::BUILTIN_OBJ; };
+  std::shared_ptr<Bag> exec(
+      const std::list<std::shared_ptr<Bag>>& arguments) const {
+    return _fn(_name, arguments);
+  }
+};
+
 class FunctionBag : public Bag {
  private:
   std::shared_ptr<Env::Environment> _env;
@@ -212,7 +235,9 @@ inline std::shared_ptr<ErrorBag> convertToError(std::shared_ptr<Bag> bag) {
 inline std::shared_ptr<StringBag> convertToString(std::shared_ptr<Bag> bag) {
   return convertType<StringBag>(bag, Type::STRING_OBJ);
 }
-
+inline std::shared_ptr<BuiltinBag> convertToBuiltin(std::shared_ptr<Bag> bag) {
+  return convertType<BuiltinBag>(bag, Type::BUILTIN_OBJ);
+}
 inline std::shared_ptr<FunctionBag> convertToFunction(
     std::shared_ptr<Bag> bag) {
   return convertType<FunctionBag>(bag, Type::FUNC_OBJ);
