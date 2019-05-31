@@ -9,7 +9,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
  private:
   WriterFn writer;
 
-  ASTPrinter(WriterFn writer) : writer(writer){};
+  explicit ASTPrinter(WriterFn writer) : writer(writer){};
 
  public:
   virtual void dispatch(AST::Node &node) override {

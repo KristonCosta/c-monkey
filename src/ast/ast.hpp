@@ -126,7 +126,7 @@ class Identifier : public Expression {
   std::string value;
 
  public:
-  Identifier(std::shared_ptr<Token> token, const std::string value)
+  Identifier(std::shared_ptr<Token> token, const std::string &value)
       : value(value) {
     this->token = token;
   }
@@ -159,7 +159,7 @@ class StringLiteral : public Expression {
   std::string value;
 
  public:
-  StringLiteral(std::shared_ptr<Token> token, const std::string value)
+  StringLiteral(std::shared_ptr<Token> token, const std::string &value)
       : value(value) {
     this->token = token;
   }
@@ -198,7 +198,7 @@ class PrefixExpression : public Expression {
 
  public:
   PrefixExpression(std::shared_ptr<Token> token,
-                   std::shared_ptr<Expression> right, Operator op)
+                   std::shared_ptr<Expression> right, const Operator &op)
       : right(right), op(op) {
     this->token = token;
   }
@@ -220,7 +220,7 @@ class InfixExpression : public Expression {
  public:
   InfixExpression(std::shared_ptr<Token> token,
                   std::shared_ptr<Expression> left,
-                  std::shared_ptr<Expression> right, Operator op)
+                  std::shared_ptr<Expression> right, const Operator &op)
       : left(left), right(right), op(op) {
     this->token = token;
   }

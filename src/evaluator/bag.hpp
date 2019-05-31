@@ -67,7 +67,7 @@ class IntegerBag : public Bag {
   int64_t _value;
 
  public:
-  IntegerBag(int64_t value) : _value(value){};
+  explicit IntegerBag(int64_t value) : _value(value){};
   virtual std::string inspect() const override {
     return fmt::format("{}", _value);
   };
@@ -80,7 +80,7 @@ class StringBag : public Bag {
   std::string _value;
 
  public:
-  StringBag(const std::string value) : _value(value){};
+  explicit StringBag(const std::string& value) : _value(value){};
   virtual std::string inspect() const override {
     return fmt::format("{}", _value);
   };
@@ -93,7 +93,7 @@ class BooleanBag : public Bag {
   bool _value;
 
  public:
-  BooleanBag(bool value) : _value(value){};
+  explicit BooleanBag(bool value) : _value(value){};
   virtual std::string inspect() const override {
     return fmt::format("{}", _value);
   };
@@ -106,7 +106,7 @@ class ErrorBag : public Bag {
   std::string _message;
 
  public:
-  ErrorBag(const std::string message) : _message(message){};
+  explicit ErrorBag(const std::string& message) : _message(message){};
   virtual std::string inspect() const override {
     return fmt::format("error: {}", _message);
   };
@@ -131,7 +131,7 @@ class ReturnBag : public Bag {
   std::shared_ptr<Bag> _value;
 
  public:
-  ReturnBag(std::shared_ptr<Bag> value) : _value(value){};
+  explicit ReturnBag(std::shared_ptr<Bag> value) : _value(value){};
   virtual std::string inspect() const override {
     return fmt::format("{}", _value->inspect());
   };
@@ -147,7 +147,7 @@ class FunctionBag : public Bag {
 
  public:
   FunctionBag(std::shared_ptr<Env::Environment> env,
-              std::list<std::shared_ptr<AST::Identifier>> arguments,
+              const std::list<std::shared_ptr<AST::Identifier>>& arguments,
               std::shared_ptr<AST::BlockStatement> body)
       : _env(env), _arguments(arguments), _body(body){};
   virtual std::string inspect() const override {

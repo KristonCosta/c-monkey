@@ -112,7 +112,7 @@ class Parser {
   }
 
  public:
-  Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer)) {
+  explicit Parser(std::unique_ptr<Lexer> lexer) : lexer(std::move(lexer)) {
     if (!spdlog::get(PARSER_LOGGER)) {
       spdlog::create<spdlog::sinks::null_sink_st>(PARSER_LOGGER);
     }

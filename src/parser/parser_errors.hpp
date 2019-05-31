@@ -4,7 +4,7 @@
 #include <token.hpp>
 
 struct ParserError {
-  ParserError(std::shared_ptr<Token> token, const std::string message)
+  ParserError(const std::shared_ptr<Token> &token, const std::string message)
       : token(token), message(message){};
   std::shared_ptr<Token> token;
   std::string message;

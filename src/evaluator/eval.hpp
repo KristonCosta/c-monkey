@@ -11,7 +11,7 @@ const std::string EVAL_LOGGER = "eval";
 
 class ASTEvaluator : public AST::AbstractDispatcher {
  private:
-  ASTEvaluator(std::shared_ptr<Env::Environment> env) : env(env) {
+  explicit ASTEvaluator(std::shared_ptr<Env::Environment> env) : env(env) {
     if (!spdlog::get(EVAL_LOGGER)) {
       spdlog::create<spdlog::sinks::null_sink_st>(EVAL_LOGGER);
     }
