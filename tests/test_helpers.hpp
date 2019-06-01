@@ -5,7 +5,7 @@
 #include <parser.hpp>
 #include <print_dispatcher.hpp>
 
-inline void printErrors(const std::list<ParserError> &errors) {
+inline void printErrors(const std::vector<ParserError> &errors) {
   for (const auto &error : errors) {
     WARN(fmt::format("{}", error));
   }

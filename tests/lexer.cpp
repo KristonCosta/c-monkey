@@ -11,7 +11,8 @@ let ten = 10;
 
 let add = fn(x, y) { x + y; };
 let result = add(five, ten);
-let x = "test 123 five!";)V0G0N";
+let x = "test 123 five!";
+[1, 2];)V0G0N";
 
   Pair testPairs[] = {
       Pair{TokenType::LET, "let"},
@@ -54,6 +55,12 @@ let x = "test 123 five!";)V0G0N";
       Pair{TokenType::IDENT, "x"},
       Pair{TokenType::ASSIGN, "="},
       Pair{TokenType::STRING, "test 123 five!"},
+      Pair{TokenType::SEMICOLON, ";"},
+      Pair{TokenType::LBRACKET, "["},
+      Pair{TokenType::INTEGER, "1"},
+      Pair{TokenType::COMMA, ","},
+      Pair{TokenType::INTEGER, "2"},
+      Pair{TokenType::RBRACKET, "]"},
       Pair{TokenType::SEMICOLON, ";"},
       Pair{TokenType::END_OF_FILE, std::string(1, '\0')},
   };

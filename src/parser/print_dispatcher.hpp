@@ -38,6 +38,26 @@ class ASTPrinter : public AST::AbstractDispatcher {
   virtual void dispatch(AST::StringLiteral &node) override {
     writer(node.tokenLiteral());
   }
+  virtual void dispatch(AST::ArrayLiteral &node) override {
+    writer("[");
+    auto args = node.getValues();
+    for (auto arg = args.begin(); arg != args.end(); ++arg) {
+      if (arg == args.begin()) {
+        arg->get()->visit(*this);
+      } else {
+        writer(", ");
+        arg->get()->visit(*this);
+      }
+    }
+    writer("]");
+  }
+  virtual void dispatch(AST::IndexExpression &node) override {
+    writer("(");
+    node.getLeft()->visit(*this);
+    writer("[");
+    node.getIndex()->visit(*this);
+    writer("])");
+  }
   virtual void dispatch(AST::PrefixExpression &node) override {
     writer("(");
     writer(node.getOp());

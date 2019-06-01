@@ -26,6 +26,21 @@ inline AST::IntegerLiteral *testIntegerLiteral(AST::Expression *node,
   return expression;
 }
 
+inline AST::ArrayLiteral *testArrayLiteral(
+    std::shared_ptr<AST::Expression> node, int num) {
+  const auto expression = dynamic_cast<AST::ArrayLiteral *>(node.get());
+  REQUIRE(expression);
+  REQUIRE(expression->size() == num);
+  return expression;
+}
+
+inline AST::IndexExpression *testIndexExpression(
+    std::shared_ptr<AST::Expression> node) {
+  const auto expression = dynamic_cast<AST::IndexExpression *>(node.get());
+  REQUIRE(expression);
+  return expression;
+}
+
 inline AST::LetStatement *testLetStatement(AST::Statement *node,
                                            const std::string &str) {
   REQUIRE(node->tokenLiteral() == "let");

@@ -26,6 +26,7 @@ enum class Precedence : std::uint8_t {
   PRODUCT = 5,
   PREFIX = 6,
   CALL = 7,
+  INDEX = 8,
 };
 
 class Parser {
@@ -33,7 +34,7 @@ class Parser {
   std::unique_ptr<Lexer> lexer;
   std::shared_ptr<Token> currentToken;
   std::shared_ptr<Token> peekToken;
-  std::list<ParserError> _errors;
+  std::vector<ParserError> _errors;
 
   std::map<TokenType, PrefixParseFunction> prefixParseFunctions;
   std::map<TokenType, InfixParseFunction> infixParseFunctions;
@@ -59,26 +60,41 @@ class Parser {
       std::shared_ptr<AST::Expression>);
   std::shared_ptr<AST::Expression> parseGroupedExpression();
   std::shared_ptr<AST::Expression> parseIfExpression();
+  std::shared_ptr<AST::Expression> parseArrayLiteral();
   std::shared_ptr<AST::Expression> parseFunctionLiteral();
   std::shared_ptr<AST::Expression> parseCallExpression(
       std::shared_ptr<AST::Expression> func);
+  std::shared_ptr<AST::Expression> parseIndexExpression(
+      std::shared_ptr<AST::Expression> left);
+
+  template <class T>
+  std::shared_ptr<T> convertExpressionToType(
+      std::shared_ptr<AST::Expression> node) {
+    auto conv = std::dynamic_pointer_cast<T>(node);
+    if (conv) {
+      return conv;
+    } else {
+      this->addError(node->getToken(),
+                     fmt::format("AST::Expression conversion failed"));
+      return nullptr;
+    }
+  }
 
   template <typename OutputIterator>
-  bool parseFunctionParameters(OutputIterator out) {
-    if (this->peekTokenIs(TokenType::RPAREN)) {
+  bool parseParameters(OutputIterator out, TokenType endToken) {
+    if (this->peekTokenIs(endToken)) {
+      this->nextToken();
       return true;
     }
     this->nextToken();
 
-    *(out++) = (std::make_shared<AST::Identifier>(this->currentToken,
-                                                  this->currentToken->literal));
+    *(out++) = parseExpression(Precedence::BOTTOM);
     while (this->peekTokenIs(TokenType::COMMA)) {
       this->nextToken();
       this->nextToken();
-      *(out++) = (std::make_shared<AST::Identifier>(
-          this->currentToken, this->currentToken->literal));
+      *(out++) = parseExpression(Precedence::BOTTOM);
     }
-    if (!this->expectPeek(TokenType::RPAREN)) {
+    if (!this->expectPeek(endToken)) {
       return false;
     }
     return true;
@@ -132,6 +148,7 @@ class Parser {
     this->registerPrefix(TokenType::IF, &Parser::parseIfExpression);
     this->registerPrefix(TokenType::FUNCTION, &Parser::parseFunctionLiteral);
     this->registerPrefix(TokenType::STRING, &Parser::parseString);
+    this->registerPrefix(TokenType::LBRACKET, &Parser::parseArrayLiteral);
 
     this->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
     this->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);
@@ -142,11 +159,12 @@ class Parser {
     this->registerInfix(TokenType::LT, &Parser::parseInfixExpression);
     this->registerInfix(TokenType::GT, &Parser::parseInfixExpression);
     this->registerInfix(TokenType::LPAREN, &Parser::parseCallExpression);
+    this->registerInfix(TokenType::LBRACKET, &Parser::parseIndexExpression);
   }
 
   std::unique_ptr<AST::Program> parseProgram();
 
-  const std::list<ParserError> &errors() { return this->_errors; }
+  const std::vector<ParserError> &errors() { return this->_errors; }
 
   void registerPrefix(TokenType type, PrefixParseFunction func) {
     this->prefixParseFunctions.insert(

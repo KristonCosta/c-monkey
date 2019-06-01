@@ -57,3 +57,10 @@ inline std::shared_ptr<Eval::ErrorBag> makeBuiltinInvalidNumberOfArguments(
       fmt::format("wrong number of arguments to `{}`: expected {}, found {}",
                   identifier, expected, actual));
 }
+
+inline std::shared_ptr<Eval::ErrorBag> makeInvalidIndexException(
+    Eval::Type leftType, Eval::Type indexType) {
+  return makeErrorWithMessage(fmt::format(
+      "index operator not supported: {} doesn't support index type {}",
+      Eval::typeToString(leftType), Eval::typeToString(indexType)));
+}

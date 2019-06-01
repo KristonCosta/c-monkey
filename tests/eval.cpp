@@ -160,6 +160,34 @@ TEST_CASE("Let statement testing", "[eval]") {
   }
 }
 
+TEST_CASE("Index evaluation testing", "[eval]") {
+  //  spdlog::stdout_color_mt(EVAL_LOGGER);
+  Pair<int64_t> pairs[] = {
+      {"[1,2,3][0]", 1},
+      {"[1,2,3][2]", 3},
+      {"let i = 0; [1][i]", 1},
+      {"let array = [7,5,4];array[1]", 5},
+      {"let arr = [1,2,3]; arr[0] + arr[1] + arr[2];", 6},
+  };
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
+    testIntegerBag(bag, pair.expected);
+  }
+}
+
+TEST_CASE("Index evaluation testing invalid index", "[eval]") {
+  //  spdlog::stdout_color_mt(EVAL_LOGGER);
+  std::string vals[] = {"[1,2,3][-1];", "[1,2,3][3];"};
+  for (const auto& val : vals) {
+    auto program = testProgramWithInput(val);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
+    testNullBag(bag);
+  }
+}
+
 TEST_CASE("String eval testing", "[eval]") {
   //  spdlog::stdout_color_mt(EVAL_LOGGER);
   Pair<std::string> pairs[] = {
@@ -174,6 +202,52 @@ TEST_CASE("String eval testing", "[eval]") {
     auto bag = ASTEvaluator::eval(*program, env);
     testStringBag(bag, pair.expected);
   }
+}
+
+TEST_CASE("Array builtins int", "[eval]") {
+  Pair<int64_t> pairs[] = {
+      {"len([1,2,3,4])", 4},
+      {"len([])", 0},
+      {"head([3,4,5])", 3},
+  };
+  for (const auto& pair : pairs) {
+    auto program = testProgramWithInput(pair.input);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
+    testIntegerBag(bag, pair.expected);
+  }
+}
+
+TEST_CASE("Array builtins array", "[eval]") {
+  std::string inputs[] = {
+      {"tail([1,2,3,4,5])"},
+      {"push([2,3,4], 5)"},
+  };
+  for (const auto& input : inputs) {
+    auto program = testProgramWithInput(input);
+    auto env = std::make_shared<Env::Environment>();
+    auto bag = ASTEvaluator::eval(*program, env);
+    auto arr = testArrayBag(bag, 4);
+    testIntegerBag(arr->values().at(0), 2);
+    testIntegerBag(arr->values().at(1), 3);
+    testIntegerBag(arr->values().at(2), 4);
+    testIntegerBag(arr->values().at(3), 5);
+  }
+}
+
+TEST_CASE("Array eval testing", "[eval]") {
+  // spdlog::stdout_color_mt(EVAL_LOGGER);
+  auto input = "[1, 2 + 2, 3 * 3]";
+  auto program = testProgramWithInput(input);
+  auto env = std::make_shared<Env::Environment>();
+  auto bag = ASTEvaluator::eval(*program, env);
+  auto arr = testArrayBag(bag, 3);
+  auto itr = arr->values().begin();
+  testIntegerBag(itr->get(), 1);
+  itr++;
+  testIntegerBag(itr->get(), 4);
+  itr++;
+  testIntegerBag(itr->get(), 9);
 }
 
 TEST_CASE("Function eval testing", "[eval]") {

@@ -33,6 +33,8 @@ enum class TokenType : std::uint8_t {
   RPAREN = 0x41,
   LBRACE = 0x42,
   RBRACE = 0x43,
+  LBRACKET = 0x44,
+  RBRACKET = 0x45,
 
   // Keywords
   FUNCTION = 0x50,

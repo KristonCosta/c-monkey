@@ -108,6 +108,12 @@ std::shared_ptr<Token> Lexer::nextToken() {
     case '}':
       type = TokenType::RBRACE;
       break;
+    case '[':
+      type = TokenType::LBRACKET;
+      break;
+    case ']':
+      type = TokenType::RBRACKET;
+      break;
     case '-':
       type = TokenType::MINUS;
       break;

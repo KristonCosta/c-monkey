@@ -8,14 +8,11 @@
 #include "builtin.hpp"
 #include "spdlog/sinks/null_sink.h"
 
-const std::shared_ptr<Eval::BooleanBag> TRUE_BAG =
-    std::make_shared<Eval::BooleanBag>(true);
+const std::shared_ptr<Eval::BooleanBag> TRUE_BAG = Eval::TRUE_BAG;
 
-const std::shared_ptr<Eval::BooleanBag> FALSE_BAG =
-    std::make_shared<Eval::BooleanBag>(false);
+const std::shared_ptr<Eval::BooleanBag> FALSE_BAG = Eval::FALSE_BAG;
 
-const std::shared_ptr<Eval::NullBag> NULL_BAG =
-    std::make_shared<Eval::NullBag>();
+const std::shared_ptr<Eval::NullBag> NULL_BAG = Eval::NULL_BAG;
 
 std::shared_ptr<Eval::IntegerBag> makeIntegerBag(int64_t value) {
   return std::make_shared<Eval::IntegerBag>(value);
@@ -32,9 +29,14 @@ std::shared_ptr<Eval::StringBag> makeStringBag(std::string value) {
 
 std::shared_ptr<Eval::FunctionBag> makeFunctionBag(
     std::shared_ptr<Env::Environment> env,
-    std::list<std::shared_ptr<AST::Identifier>> arguments,
+    std::vector<std::shared_ptr<AST::Identifier>> arguments,
     std::shared_ptr<AST::BlockStatement> body) {
   return std::make_shared<Eval::FunctionBag>(env, arguments, body);
+}
+
+std::shared_ptr<Eval::ArrayBag> makeArrayBag(
+    std::vector<std::shared_ptr<Eval::Bag>> values) {
+  return std::make_shared<Eval::ArrayBag>(values);
 }
 
 std::shared_ptr<Eval::BooleanBag> getBooleanBag(bool val) {
@@ -124,6 +126,25 @@ std::shared_ptr<Eval::Bag> evalStringInfixExpression(
   return makeInfixUnknownOperatorError(left->type(), right->type(), op);
 }
 
+std::shared_ptr<Eval::Bag> evalArrayIndexExpression(
+    std::shared_ptr<Eval::ArrayBag> left,
+    std::shared_ptr<Eval::IntegerBag> index) {
+  if (index->value() > left->values().size() - 1) {
+    return NULL_BAG;
+  }
+  return left->values().at(index->value());
+}
+
+std::shared_ptr<Eval::Bag> evalIndexExpression(
+    std::shared_ptr<Eval::Bag> left, std::shared_ptr<Eval::Bag> index) {
+  if (left->type() == Eval::Type::ARRAY_OBJ &&
+      index->type() == Eval::Type::INTEGER_OBJ) {
+    return evalArrayIndexExpression(convertToArray(left),
+                                    convertToInteger(index));
+  }
+  return makeInvalidIndexException(left->type(), index->type());
+}
+
 std::shared_ptr<Eval::Bag> evalInfixExpression(
     const std::string &op, std::shared_ptr<Eval::Bag> left,
     std::shared_ptr<Eval::Bag> right) {
@@ -193,7 +214,7 @@ std::shared_ptr<Eval::Bag> evalIfExpression(
 }
 
 std::shared_ptr<Eval::Bag> evalProgram(
-    std::list<std::shared_ptr<AST::Statement>> &statements,
+    std::vector<std::shared_ptr<AST::Statement>> &statements,
     std::shared_ptr<Env::Environment> env) {
   std::shared_ptr<Eval::Bag> bag = NULL_BAG;
   for (const auto &statement : statements) {
@@ -212,7 +233,7 @@ std::shared_ptr<Eval::Bag> evalProgram(
 }
 
 std::shared_ptr<Eval::Bag> evalBlockStatement(
-    std::list<std::shared_ptr<AST::Statement>> &statements,
+    std::vector<std::shared_ptr<AST::Statement>> &statements,
     std::shared_ptr<Env::Environment> env) {
   std::shared_ptr<Eval::Bag> bag = NULL_BAG;
   for (const auto &statement : statements) {
@@ -248,7 +269,7 @@ std::shared_ptr<Eval::Bag> applyFunction(
     return ret;
   } else if (val->type() == Eval::Type::BUILTIN_OBJ) {
     auto func = Eval::convertToBuiltin(val);
-    std::list<std::shared_ptr<Eval::Bag>> args;
+    std::vector<std::shared_ptr<Eval::Bag>> args;
     for (const auto &arg : node.getArguments()) {
       auto evalArg = ASTEvaluator::eval(*arg, env);
       if (isError(evalArg)) {
@@ -301,6 +322,32 @@ void ASTEvaluator::dispatch(AST::IntegerLiteral &node) {
 void ASTEvaluator::dispatch(AST::StringLiteral &node) {
   spdlog::get(EVAL_LOGGER)->info("Creating string literal {}", node.getValue());
   bag = std::make_shared<Eval::StringBag>(node.getValue());
+};
+void ASTEvaluator::dispatch(AST::ArrayLiteral &node) {
+  spdlog::get(EVAL_LOGGER)->info("Evaluating array literal");
+  std::vector<std::shared_ptr<Eval::Bag>> args;
+  for (const auto &val : node.getValues()) {
+    auto evalVal = ASTEvaluator::eval(*val, env);
+    if (isError(evalVal)) {
+      bag = evalVal;
+      return;
+    }
+    args.push_back(evalVal);
+  }
+  bag = makeArrayBag(args);
+};
+void ASTEvaluator::dispatch(AST::IndexExpression &node) {
+  auto left = eval(*node.getLeft(), env);
+  if (isError(left)) {
+    bag = left;
+    return;
+  }
+  auto index = eval(*node.getIndex(), env);
+  if (isError(index)) {
+    bag = index;
+    return;
+  }
+  bag = evalIndexExpression(left, index);
 };
 void ASTEvaluator::dispatch(AST::PrefixExpression &node) {
   spdlog::get(EVAL_LOGGER)

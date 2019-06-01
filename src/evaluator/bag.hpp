@@ -24,6 +24,7 @@ enum class Type {
   FUNC_OBJ,
   RETURN_OBJ,
   BUILTIN_OBJ,
+  ARRAY_OBJ,
 };
 
 inline std::string typeToString(Type type) {
@@ -46,6 +47,8 @@ inline std::string typeToString(Type type) {
       return "FUNCTION";
     case Type::BUILTIN_OBJ:
       return "BUILTIN";
+    case Type::ARRAY_OBJ:
+      return "ARRAY";
   }
 }
 
@@ -61,7 +64,8 @@ class Bag {
 };
 
 typedef std::function<std::shared_ptr<Bag>(
-    const std::string& name, const std::list<std::shared_ptr<Bag>>& arguments)>
+    const std::string& name,
+    const std::vector<std::shared_ptr<Bag>>& arguments)>
     BuiltinFunction;
 
 /*
@@ -146,6 +150,30 @@ class ReturnBag : public Bag {
   std::shared_ptr<Bag> value() const { return _value; }
 };
 
+class ArrayBag : public Bag {
+ private:
+  std::vector<std::shared_ptr<Bag>> _values;
+
+ public:
+  explicit ArrayBag(const std::vector<std::shared_ptr<Bag>>& values)
+      : _values(values){};
+  virtual std::string inspect() const override {
+    std::stringstream ss;
+    ss << "[";
+    for (auto val = _values.begin(); val != _values.end(); ++val) {
+      if (val == _values.begin()) {
+        ss << val->get()->inspect();
+      } else {
+        ss << ", " << val->get()->inspect();
+      }
+    }
+    ss << "]";
+    return ss.str();
+  };
+  virtual Type type() const override { return Type::ARRAY_OBJ; };
+  std::vector<std::shared_ptr<Bag>>& values() { return _values; }
+};
+
 class BuiltinBag : public Bag {
  private:
   std::string _name;
@@ -157,7 +185,7 @@ class BuiltinBag : public Bag {
   virtual std::string inspect() const override { return _name; };
   virtual Type type() const override { return Type::BUILTIN_OBJ; };
   std::shared_ptr<Bag> exec(
-      const std::list<std::shared_ptr<Bag>>& arguments) const {
+      const std::vector<std::shared_ptr<Bag>>& arguments) const {
     return _fn(_name, arguments);
   }
 };
@@ -165,12 +193,12 @@ class BuiltinBag : public Bag {
 class FunctionBag : public Bag {
  private:
   std::shared_ptr<Env::Environment> _env;
-  std::list<std::shared_ptr<AST::Identifier>> _arguments;
+  std::vector<std::shared_ptr<AST::Identifier>> _arguments;
   std::shared_ptr<AST::BlockStatement> _body;
 
  public:
   FunctionBag(std::shared_ptr<Env::Environment> env,
-              const std::list<std::shared_ptr<AST::Identifier>>& arguments,
+              const std::vector<std::shared_ptr<AST::Identifier>>& arguments,
               std::shared_ptr<AST::BlockStatement> body)
       : _env(env), _arguments(arguments), _body(body){};
   virtual std::string inspect() const override {
@@ -192,7 +220,7 @@ class FunctionBag : public Bag {
     return ss.str();
   };
   virtual Type type() const override { return Type::FUNC_OBJ; };
-  std::list<std::shared_ptr<AST::Identifier>>& arguments() {
+  std::vector<std::shared_ptr<AST::Identifier>>& arguments() {
     return _arguments;
   }
   std::shared_ptr<AST::BlockStatement> body() { return _body; }
@@ -242,4 +270,12 @@ inline std::shared_ptr<FunctionBag> convertToFunction(
     std::shared_ptr<Bag> bag) {
   return convertType<FunctionBag>(bag, Type::FUNC_OBJ);
 }
+inline std::shared_ptr<ArrayBag> convertToArray(std::shared_ptr<Bag> bag) {
+  return convertType<ArrayBag>(bag, Type::ARRAY_OBJ);
+}
+
+extern const std::shared_ptr<Eval::BooleanBag> TRUE_BAG;
+extern const std::shared_ptr<Eval::BooleanBag> FALSE_BAG;
+extern const std::shared_ptr<Eval::NullBag> NULL_BAG;
+
 }  // namespace Eval

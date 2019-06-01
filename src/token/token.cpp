@@ -85,6 +85,10 @@ std::string tokenTypeToString(TokenType type) {
       return "EQ";
     case TokenType::STRING:
       return "STRING";
+    case TokenType::RBRACKET:
+      return "RBRACKET";
+    case TokenType::LBRACKET:
+      return "LBRACKET";
   }
   throw "Token type doesn't exist!";
 }

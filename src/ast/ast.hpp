@@ -16,8 +16,11 @@ class Program;
 
 class Identifier;
 class IntegerLiteral;
+class ArrayLiteral;
 class StringLiteral;
 class Boolean;
+
+class IndexExpression;
 class PrefixExpression;
 class InfixExpression;
 class IfExpression;
@@ -40,7 +43,10 @@ class AbstractDispatcher {
   virtual void dispatch(Identifier &node) = 0;
   virtual void dispatch(IntegerLiteral &node) = 0;
   virtual void dispatch(StringLiteral &node) = 0;
+  virtual void dispatch(ArrayLiteral &node) = 0;
   virtual void dispatch(Boolean &node) = 0;
+
+  virtual void dispatch(IndexExpression &node) = 0;
   virtual void dispatch(PrefixExpression &node) = 0;
   virtual void dispatch(InfixExpression &node) = 0;
   virtual void dispatch(IfExpression &node) = 0;
@@ -102,10 +108,10 @@ class Expression : public Node {
 */
 class Program : public Node {
  private:
-  std::list<std::shared_ptr<Statement>> statements;
+  std::vector<std::shared_ptr<Statement>> statements;
 
  public:
-  const std::list<std::shared_ptr<Statement>> &getStatements() const;
+  const std::vector<std::shared_ptr<Statement>> &getStatements() const;
   const uint64_t size();
   void addStatement(std::shared_ptr<Statement> statement);
   virtual std::string tokenLiteral() const override;
@@ -165,6 +171,21 @@ class StringLiteral : public Expression {
   }
 
   const std::string getValue();
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+class ArrayLiteral : public Expression {
+ private:
+  std::vector<std::shared_ptr<Expression>> values;
+
+ public:
+  ArrayLiteral(std::shared_ptr<Token> token) { this->token = token; }
+  const std::vector<std::shared_ptr<Expression>> &getValues() const;
+  const uint64_t size();
+  void addValue(std::shared_ptr<Expression> val);
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
@@ -234,6 +255,27 @@ class InfixExpression : public Expression {
   }
 };
 
+class IndexExpression : public Expression {
+ private:
+  std::shared_ptr<Expression> left;
+  std::shared_ptr<Expression> index;
+
+ public:
+  IndexExpression(std::shared_ptr<Token> token,
+                  std::shared_ptr<Expression> left,
+                  std::shared_ptr<Expression> index)
+      : left(left), index(index) {
+    this->token = token;
+  }
+
+  const std::shared_ptr<Expression> getLeft();
+  const std::shared_ptr<Expression> getIndex();
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
 /*
 
   Expression Types - complex
@@ -262,7 +304,7 @@ class IfExpression : public Expression {
 };
 
 class FunctionLiteral : public Expression {
-  std::list<std::shared_ptr<Identifier>> arguments;
+  std::vector<std::shared_ptr<Identifier>> arguments;
   std::shared_ptr<BlockStatement> body;
 
  public:
@@ -271,7 +313,7 @@ class FunctionLiteral : public Expression {
       : body(body) {
     this->token = token;
   };
-  const std::list<std::shared_ptr<Identifier>> &getArguments() const;
+  const std::vector<std::shared_ptr<Identifier>> &getArguments() const;
   const uint64_t size();
   void addArgument(std::shared_ptr<Identifier> identifier);
   std::shared_ptr<BlockStatement> &getBody();
@@ -283,14 +325,14 @@ class FunctionLiteral : public Expression {
 
 class CallExpression : public Expression {
   std::shared_ptr<Expression> func;
-  std::list<std::shared_ptr<Expression>> arguments;
+  std::vector<std::shared_ptr<Expression>> arguments;
 
  public:
   CallExpression(std::shared_ptr<Token> token, std::shared_ptr<Expression> func)
       : func(func) {
     this->token = token;
   };
-  const std::list<std::shared_ptr<Expression>> &getArguments() const;
+  const std::vector<std::shared_ptr<Expression>> &getArguments() const;
   const uint64_t size();
   void addArgument(std::shared_ptr<Expression> expr);
   std::shared_ptr<Expression> getFunction();
@@ -362,13 +404,13 @@ class LetStatement : public Statement {
 
 class BlockStatement : public Statement {
  private:
-  std::list<std::shared_ptr<Statement>> statements;
+  std::vector<std::shared_ptr<Statement>> statements;
 
  public:
   explicit BlockStatement(std::shared_ptr<Token> token) {
     this->token = token;
   };
-  const std::list<std::shared_ptr<Statement>> &getStatements() const;
+  const std::vector<std::shared_ptr<Statement>> &getStatements() const;
   const uint64_t size();
   void addStatement(std::shared_ptr<Statement> statement);
   virtual std::string toDebugString() const override;

@@ -11,7 +11,8 @@ std::map<TokenType, Precedence> precedences = {
     {TokenType::MINUS, Precedence::SUM},
     {TokenType::SLASH, Precedence::PRODUCT},
     {TokenType::ASTERISK, Precedence::PRODUCT},
-    {TokenType::LPAREN, Precedence::CALL}};
+    {TokenType::LPAREN, Precedence::CALL},
+    {TokenType::LBRACKET, Precedence::INDEX}};
 
 std::string precedenceToString(Precedence prec) {
   switch (prec) {
@@ -29,6 +30,8 @@ std::string precedenceToString(Precedence prec) {
       return "PREFIX";
     case Precedence::CALL:
       return "CALL";
+    case Precedence::INDEX:
+      return "INDEX";
   }
   return "UNKNOWN";
 }
@@ -83,6 +86,38 @@ std::shared_ptr<AST::Statement> Parser::parseStatement() {
     default:
       return this->parseExpressionStatement();
   }
+}
+
+std::shared_ptr<AST::Expression> Parser::parseArrayLiteral() {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing array literal for {} ", *this->currentToken);
+
+  auto tok = this->currentToken;
+  std::vector<std::shared_ptr<AST::Expression>> args;
+  auto foundElements =
+      this->parseParameters(std::back_inserter(args), TokenType::RBRACKET);
+  if (!foundElements) {
+    return nullptr;
+  }
+  auto array = std::make_shared<AST::ArrayLiteral>(tok);
+  for (auto arg : args) {
+    array->addValue(arg);
+  };
+  return array;
+}
+
+std::shared_ptr<AST::Expression> Parser::parseIndexExpression(
+    std::shared_ptr<AST::Expression> left) {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing index expression for {} ", *this->currentToken);
+  auto tok = this->currentToken;
+  this->nextToken();
+  auto index = parseExpression(Precedence::BOTTOM);
+
+  if (!this->expectPeek(TokenType::RBRACKET)) {
+    return nullptr;
+  }
+  return std::make_shared<AST::IndexExpression>(tok, left, index);
 }
 
 std::shared_ptr<AST::Statement> Parser::parseExpressionStatement() {
@@ -230,8 +265,9 @@ std::shared_ptr<AST::Expression> Parser::parseFunctionLiteral() {
   if (!this->expectPeek(TokenType::LPAREN)) {
     return nullptr;
   }
-  std::list<std::shared_ptr<AST::Identifier>> args;
-  auto foundParams = this->parseFunctionParameters(std::back_inserter(args));
+  std::vector<std::shared_ptr<AST::Expression>> args;
+  auto foundParams =
+      this->parseParameters(std::back_inserter(args), TokenType::RPAREN);
   if (!foundParams) {
     return nullptr;
   }
@@ -242,7 +278,13 @@ std::shared_ptr<AST::Expression> Parser::parseFunctionLiteral() {
   auto fn = std::make_shared<AST::FunctionLiteral>(
       tok, std::dynamic_pointer_cast<AST::BlockStatement>(body));
   for (auto arg : args) {
-    fn->addArgument(arg);
+    std::shared_ptr<AST::Identifier> ident =
+        convertExpressionToType<AST::Identifier>(arg);
+    if (ident) {
+      fn->addArgument(ident);
+    } else {
+      return nullptr;
+    }
   };
   return fn;
 }
@@ -281,8 +323,9 @@ std::shared_ptr<AST::Expression> Parser::parseCallExpression(
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing call expression for {} ", *this->currentToken);
   auto tok = this->currentToken;
-  std::list<std::shared_ptr<AST::Expression>> args;
-  auto foundParams = this->parseCallArguments(std::back_inserter(args));
+  std::vector<std::shared_ptr<AST::Expression>> args;
+  auto foundParams =
+      this->parseParameters(std::back_inserter(args), TokenType::RPAREN);
   if (!foundParams) {
     return nullptr;
   }
@@ -332,6 +375,7 @@ bool Parser::currentTokenIs(TokenType type) const {
 bool Parser::peekTokenIs(TokenType type) const {
   return this->peekToken->type == type;
 }
+
 bool Parser::expectPeek(TokenType type) {
   if (this->peekTokenIs(type)) {
     this->nextToken();

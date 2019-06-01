@@ -16,7 +16,7 @@ std::string Expression::toDebugString() const {
 
 */
 
-const std::list<std::shared_ptr<Statement>> &Program::getStatements() const {
+const std::vector<std::shared_ptr<Statement>> &Program::getStatements() const {
   return this->statements;
 }
 
@@ -85,6 +85,25 @@ std::string StringLiteral::toDebugString() const {
   return ss.str();
 };
 
+const std::vector<std::shared_ptr<Expression>> &ArrayLiteral::getValues()
+    const {
+  return this->values;
+}
+const uint64_t ArrayLiteral::size() { return this->values.size(); }
+void ArrayLiteral::addValue(std::shared_ptr<Expression> val) {
+  this->values.push_back(val);
+}
+
+std::string ArrayLiteral::toDebugString() const {
+  std::stringstream ss;
+  ss << "[array token=" << *this->token << " values=[";
+  for (const auto &val : values) {
+    ss << val->toDebugString() << ", ";
+  }
+  ss << "]]";
+  return ss.str();
+}
+
 const bool Boolean::getValue() { return this->value; };
 
 std::string Boolean::toDebugString() const {
@@ -139,6 +158,20 @@ std::string InfixExpression::toDebugString() const {
   return ss.str();
 };
 
+const std::shared_ptr<Expression> IndexExpression::getLeft() {
+  return this->left;
+};
+const std::shared_ptr<Expression> IndexExpression::getIndex() {
+  return this->index;
+};
+std::string IndexExpression::toDebugString() const {
+  std::stringstream ss;
+  ss << "[index token=" << *this->token
+     << " left=" << this->left->toDebugString()
+     << " index=" << this->index->toDebugString() << "]";
+  return ss.str();
+};
+
 /*
 
   Expression Types - complex
@@ -167,7 +200,7 @@ std::string IfExpression::toDebugString() const {
   return ss.str();
 };
 
-const std::list<std::shared_ptr<Identifier>> &FunctionLiteral::getArguments()
+const std::vector<std::shared_ptr<Identifier>> &FunctionLiteral::getArguments()
     const {
   return this->arguments;
 };
@@ -192,7 +225,7 @@ std::string FunctionLiteral::toDebugString() const {
   return ss.str();
 };
 
-const std::list<std::shared_ptr<Expression>> &CallExpression::getArguments()
+const std::vector<std::shared_ptr<Expression>> &CallExpression::getArguments()
     const {
   return this->arguments;
 };
@@ -276,7 +309,7 @@ std::string LetStatement::toDebugString() const {
   return ss.str();
 };
 
-const std::list<std::shared_ptr<Statement>> &BlockStatement::getStatements()
+const std::vector<std::shared_ptr<Statement>> &BlockStatement::getStatements()
     const {
   return this->statements;
 };

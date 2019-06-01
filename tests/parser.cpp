@@ -150,6 +150,9 @@ TEST_CASE("Prefix operator precedence parsing", "[parser]") {
       {"add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
        "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"},
       {"add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"},
+      {"a * [1, 2, 3, 4][b * c] * d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"},
+      {"add(a * b[2], b[1], 2 * [1, 2][1])",
+       "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"},
 
   };
   for (const auto &pair : pairs) {
@@ -245,6 +248,41 @@ TEST_CASE("String parsing", "[parser]") {
   const auto statement =
       testLetStatement(program->getStatements().begin()->get(), "x");
   testString(statement->getValue(), "test 123");
+}
+
+TEST_CASE("Array parsing", "[parser]") {
+  // spdlog::stdout_color_mt(PARSER_LOGGER);
+  auto input = "[3, 4, 5 + 6, fn(x) { x; }];";
+  auto program = testProgramWithInput(input);
+  REQUIRE(program->size() == 1);
+  const auto statement =
+      testExpressionStatement(program->getStatements().begin()->get());
+  const auto array = testArrayLiteral(statement->getExpression(), 4);
+  auto itr = array->getValues().begin();
+  testIntegerLiteral(itr->get(), "3", 3);
+  itr++;
+  testIntegerLiteral(itr->get(), "4", 4);
+  itr++;
+  testInfixExpression(itr->get(), "+");
+  itr++;
+  const auto fn = testFunctionLiteral(itr->get());
+  const auto body =
+      testExpressionStatement(fn->getBody()->getStatements().front().get());
+  testIdentifier(body->getExpression(), "x");
+}
+
+TEST_CASE("Index expression parsing", "[parser]") {
+  // spdlog::stdout_color_mt(PARSER_LOGGER);
+  auto input = "someArray[3+1];";
+  auto program = testProgramWithInput(input);
+  REQUIRE(program->size() == 1);
+  const auto statement =
+      testExpressionStatement(program->getStatements().begin()->get());
+  const auto expr = testIndexExpression(statement->getExpression());
+  testIdentifier(expr->getLeft(), "someArray");
+  const auto infix = testInfixExpression(expr->getIndex(), "+");
+  testIntegerLiteral(infix->getLeft(), "3", 3);
+  testIntegerLiteral(infix->getRight(), "1", 1);
 }
 /*
 future
