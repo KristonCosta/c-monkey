@@ -5,7 +5,9 @@
 #include <string>
 #include "ast.hpp"
 #include "env.hpp"
+#include "output.hpp"
 #include "spdlog/sinks/null_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
 const std::string EVAL_LOGGER = "eval";
 
@@ -14,6 +16,11 @@ class ASTEvaluator : public AST::AbstractDispatcher {
   explicit ASTEvaluator(std::shared_ptr<Env::Environment> env) : env(env) {
     if (!spdlog::get(EVAL_LOGGER)) {
       spdlog::create<spdlog::sinks::null_sink_st>(EVAL_LOGGER);
+    }
+    if (!spdlog::get(EVAL_OUTPUT)) {
+      auto output = spdlog::stdout_color_mt(EVAL_OUTPUT);
+      output->set_pattern("%v");
+      output->flush_on(spdlog::level::trace);
     }
   };
   std::shared_ptr<Eval::Bag> bag = nullptr;

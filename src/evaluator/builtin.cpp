@@ -1,6 +1,7 @@
 #include "builtin.hpp"
 #include "bag.hpp"
 #include "eval_errors.hpp"
+#include "output.hpp"
 
 std::shared_ptr<Eval::Bag> evalLenBuiltin(
     const std::string& name,
@@ -76,11 +77,21 @@ std::shared_ptr<Eval::Bag> evalPushBuiltin(
   return makeBuiltinInvalidArgument(name, arg->type());
 }
 
+std::shared_ptr<Eval::Bag> evalPrintBuiltin(
+    const std::string& name,
+    const std::vector<std::shared_ptr<Eval::Bag>>& arguments) {
+  for (const auto& arg : arguments) {
+    spdlog::get(EVAL_OUTPUT)->info("{}", arg.get()->inspect());
+  }
+  return Eval::NULL_BAG;
+}
+
 std::map<std::string, std::shared_ptr<Eval::BuiltinBag>> Builtin::_builtins = {
     {"len", std::make_shared<Eval::BuiltinBag>("len", evalLenBuiltin)},
     {"head", std::make_shared<Eval::BuiltinBag>("head", evalHeadBuiltin)},
     {"tail", std::make_shared<Eval::BuiltinBag>("tail", evalTailBuiltin)},
     {"push", std::make_shared<Eval::BuiltinBag>("push", evalPushBuiltin)},
+    {"print", std::make_shared<Eval::BuiltinBag>("print", evalPrintBuiltin)},
 };
 
 std::shared_ptr<Eval::BuiltinBag> Builtin::get(const std::string& name) {
