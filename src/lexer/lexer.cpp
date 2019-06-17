@@ -90,6 +90,9 @@ std::shared_ptr<Token> Lexer::nextToken() {
     case ';':
       type = TokenType::SEMICOLON;
       break;
+    case ':':
+      type = TokenType::COLON;
+      break;
     case '(':
       type = TokenType::LPAREN;
       break;

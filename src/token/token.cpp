@@ -89,6 +89,8 @@ std::string tokenTypeToString(TokenType type) {
       return "RBRACKET";
     case TokenType::LBRACKET:
       return "LBRACKET";
+    case TokenType::COLON:
+      return "COLON";
   }
   throw "Token type doesn't exist!";
 }

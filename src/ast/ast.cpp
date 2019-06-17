@@ -112,6 +112,28 @@ std::string Boolean::toDebugString() const {
   return ss.str();
 };
 
+const std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>
+    &HashLiteral::getPairs() {
+  return this->pairs;
+};
+
+void HashLiteral::addPair(std::shared_ptr<Expression> key,
+                          std::shared_ptr<Expression> value) {
+  this->pairs[key] = value;
+}
+
+std::string HashLiteral::toDebugString() const {
+  std::stringstream ss;
+  ss << "[hash pairs="
+     << "{";
+  for (const auto &ident : pairs) {
+    ss << ident.first->toDebugString() << ": " << ident.second->toDebugString()
+       << ", ";
+  }
+  ss << "}]";
+  return ss.str();
+};
+
 /*
 
   Expression Types - operators

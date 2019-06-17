@@ -26,6 +26,7 @@ class ASTEvaluator : public AST::AbstractDispatcher {
   virtual void dispatch(AST::Program &node) override;
   virtual void dispatch(AST::Identifier &node) override;
   virtual void dispatch(AST::Boolean &node) override;
+  virtual void dispatch(AST::HashLiteral &node) override;
   virtual void dispatch(AST::StringLiteral &node) override;
   virtual void dispatch(AST::ArrayLiteral &node) override;
   virtual void dispatch(AST::IntegerLiteral &node) override;

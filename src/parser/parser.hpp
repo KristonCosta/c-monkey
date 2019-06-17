@@ -55,6 +55,7 @@ class Parser {
   std::shared_ptr<AST::Expression> parseString();
   std::shared_ptr<AST::Expression> parseIntegerLiteral();
   std::shared_ptr<AST::Expression> parseBoolean();
+  std::shared_ptr<AST::Expression> parseHashLiteral();
   std::shared_ptr<AST::Expression> parsePrefixExpression();
   std::shared_ptr<AST::Expression> parseInfixExpression(
       std::shared_ptr<AST::Expression>);
@@ -100,26 +101,6 @@ class Parser {
     return true;
   }
 
-  template <typename OutputIterator>
-  bool parseCallArguments(OutputIterator out) {
-    if (this->peekTokenIs(TokenType::COMMA)) {
-      return true;
-    }
-    this->nextToken();
-
-    *(out++) = this->parseExpression(Precedence::BOTTOM);
-
-    while (this->peekTokenIs(TokenType::COMMA)) {
-      this->nextToken();
-      this->nextToken();
-      *(out++) = this->parseExpression(Precedence::BOTTOM);
-    }
-    if (!this->expectPeek(TokenType::RPAREN)) {
-      return false;
-    }
-    return true;
-  }
-
   Precedence peekPrecedence();
   Precedence currentPrecedence();
 
@@ -149,6 +130,7 @@ class Parser {
     this->registerPrefix(TokenType::FUNCTION, &Parser::parseFunctionLiteral);
     this->registerPrefix(TokenType::STRING, &Parser::parseString);
     this->registerPrefix(TokenType::LBRACKET, &Parser::parseArrayLiteral);
+    this->registerPrefix(TokenType::LBRACE, &Parser::parseHashLiteral);
 
     this->registerInfix(TokenType::PLUS, &Parser::parseInfixExpression);
     this->registerInfix(TokenType::MINUS, &Parser::parseInfixExpression);

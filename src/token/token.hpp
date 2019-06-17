@@ -27,6 +27,7 @@ enum class TokenType : std::uint8_t {
   // Delimiters
   COMMA = 0x30,
   SEMICOLON = 0x31,
+  COLON = 0x32,
 
   // Syntax
   LPAREN = 0x40,

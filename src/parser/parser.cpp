@@ -106,6 +106,32 @@ std::shared_ptr<AST::Expression> Parser::parseArrayLiteral() {
   return array;
 }
 
+std::shared_ptr<AST::Expression> Parser::parseHashLiteral() {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing hash literal for {} ", *this->currentToken);
+  auto hash = std::make_shared<AST::HashLiteral>(this->currentToken);
+
+  while (!this->peekTokenIs(TokenType::RBRACE)) {
+    this->nextToken();
+    auto key = this->parseExpression(Precedence::BOTTOM);
+    if (!this->expectPeek(TokenType::COLON)) {
+      return nullptr;
+    }
+    this->nextToken();
+
+    auto value = this->parseExpression(Precedence::BOTTOM);
+    hash->addPair(key, value);
+    if (!this->peekTokenIs(TokenType::RBRACE) &&
+        !this->expectPeek(TokenType::COMMA)) {
+      return nullptr;
+    }
+  }
+  if (!this->expectPeek(TokenType::RBRACE)) {
+    return nullptr;
+  }
+  return hash;
+}
+
 std::shared_ptr<AST::Expression> Parser::parseIndexExpression(
     std::shared_ptr<AST::Expression> left) {
   spdlog::get(PARSER_LOGGER)

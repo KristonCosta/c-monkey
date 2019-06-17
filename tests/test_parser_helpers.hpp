@@ -109,6 +109,14 @@ inline AST::IfExpression *testIfExpression(AST::Expression *node) {
   return statement;
 }
 
+inline AST::HashLiteral *testHashLiteral(std::shared_ptr<AST::Expression> node,
+                                         int numberOfPairs) {
+  const auto statement = dynamic_cast<AST::HashLiteral *>(node.get());
+  REQUIRE(statement);
+  REQUIRE(statement->getPairs().size() == numberOfPairs);
+  return statement;
+}
+
 inline AST::FunctionLiteral *testFunctionLiteral(
     std::shared_ptr<AST::Expression> node) {
   const auto statement = dynamic_cast<AST::FunctionLiteral *>(node.get());

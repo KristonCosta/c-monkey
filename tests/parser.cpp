@@ -163,6 +163,46 @@ TEST_CASE("Prefix operator precedence parsing", "[parser]") {
   };
 };
 
+TEST_CASE("Hash literal parsing", "[parser]") {
+  // spdlog::stdout_color_mt(PARSER_LOGGER);
+  auto input = R"V0G0N({"one": 1, "two": 2, "three": 3})V0G0N";
+  auto program = testProgramWithInput(input);
+
+  REQUIRE(program->size() == 1);
+  const auto statement =
+      testExpressionStatement(program->getStatements().begin()->get());
+  const auto hash = testHashLiteral(statement->getExpression(), 3);
+  struct testPair {
+    std::string key;
+    int value;
+  };
+  std::map<std::string, int> pairs = {
+      {"one", 1},
+      {"two", 2},
+      {"three", 3},
+  };
+  auto hashPairs = hash->getPairs();
+  for (const auto &pair : hashPairs) {
+    auto expectedPair = pairs.find(pair.first->tokenLiteral());
+    REQUIRE(expectedPair != pairs.end());
+    testString(pair.first.get(), expectedPair->first);
+    testIntegerLiteral(pair.second.get(), std::to_string(expectedPair->second),
+                       expectedPair->second);
+  };
+}
+
+TEST_CASE("Empty hash literal parsing", "[parser]") {
+  // spdlog::stdout_color_mt(PARSER_LOGGER);
+  auto input = R"V0G0N({})V0G0N";
+  auto program = testProgramWithInput(input);
+
+  REQUIRE(program->size() == 1);
+  const auto statement =
+      testExpressionStatement(program->getStatements().begin()->get());
+  const auto hash = testHashLiteral(statement->getExpression(), 0);
+  REQUIRE(hash->getPairs().size() == 0);
+}
+
 TEST_CASE("If expression parsing", "[parser]") {
   auto input = "if (x < y) { x }";
   auto program = testProgramWithInput(input);

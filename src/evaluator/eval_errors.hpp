@@ -64,3 +64,9 @@ inline std::shared_ptr<Eval::ErrorBag> makeInvalidIndexException(
       "index operator not supported: {} doesn't support index type {}",
       Eval::typeToString(leftType), Eval::typeToString(indexType)));
 }
+
+inline std::shared_ptr<Eval::ErrorBag> makeInvalidHashKeyType(
+    Eval::Type keyType) {
+  return makeErrorWithMessage(fmt::format("hash key type is not supported: {}",
+                                          Eval::typeToString(keyType)));
+}

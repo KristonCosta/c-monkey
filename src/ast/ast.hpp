@@ -1,6 +1,7 @@
 #pragma once
 #include <spdlog/spdlog.h>
 #include <list>
+#include <map>
 #include <sstream>
 #include <string>
 #include <token.hpp>
@@ -19,6 +20,7 @@ class IntegerLiteral;
 class ArrayLiteral;
 class StringLiteral;
 class Boolean;
+class HashLiteral;
 
 class IndexExpression;
 class PrefixExpression;
@@ -45,6 +47,7 @@ class AbstractDispatcher {
   virtual void dispatch(StringLiteral &node) = 0;
   virtual void dispatch(ArrayLiteral &node) = 0;
   virtual void dispatch(Boolean &node) = 0;
+  virtual void dispatch(HashLiteral &node) = 0;
 
   virtual void dispatch(IndexExpression &node) = 0;
   virtual void dispatch(PrefixExpression &node) = 0;
@@ -201,6 +204,22 @@ class Boolean : public Expression {
     this->token = token;
   };
   const bool getValue();
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+class HashLiteral : public Expression {
+ private:
+  std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>> pairs;
+
+ public:
+  HashLiteral(std::shared_ptr<Token> token) { this->token = token; };
+  const std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>
+      &getPairs();
+  void addPair(std::shared_ptr<Expression> key,
+               std::shared_ptr<Expression> value);
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);

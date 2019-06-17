@@ -32,6 +32,20 @@ class ASTPrinter : public AST::AbstractDispatcher {
   virtual void dispatch(AST::Boolean &node) override {
     writer(node.tokenLiteral());
   };
+  virtual void dispatch(AST::HashLiteral &node) override {
+    writer("{");
+    auto pairs = node.getPairs();
+    for (auto pair = pairs.begin(); pair != pairs.end(); ++pair) {
+      if (pair != pairs.begin()) {
+        writer(", ");
+      }
+      pair->first->visit(*this);
+      writer(":");
+      pair->second->visit(*this);
+    }
+    writer("}");
+  };
+
   virtual void dispatch(AST::IntegerLiteral &node) override {
     writer(node.tokenLiteral());
   };
@@ -42,12 +56,10 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer("[");
     auto args = node.getValues();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
-      if (arg == args.begin()) {
-        arg->get()->visit(*this);
-      } else {
+      if (arg != args.begin()) {
         writer(", ");
-        arg->get()->visit(*this);
       }
+      arg->get()->visit(*this);
     }
     writer("]");
   }
@@ -90,12 +102,10 @@ class ASTPrinter : public AST::AbstractDispatcher {
     std::stringstream ss;
     auto args = node.getArguments();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
-      if (arg == node.getArguments().begin()) {
-        arg->get()->visit(*this);
-      } else {
+      if (arg != node.getArguments().begin()) {
         writer(", ");
-        arg->get()->visit(*this);
       }
+      arg->get()->visit(*this);
     }
     writer(")");
     writer(ss.str());
@@ -106,12 +116,10 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer("(");
     auto args = node.getArguments();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
-      if (arg == args.begin()) {
-        arg->get()->visit(*this);
-      } else {
+      if (arg != args.begin()) {
         writer(", ");
-        arg->get()->visit(*this);
       }
+      arg->get()->visit(*this);
     }
     writer(")");
   }
@@ -138,12 +146,10 @@ class ASTPrinter : public AST::AbstractDispatcher {
     // writer("{ ");
     auto stmts = node.getStatements();
     for (auto stmt = stmts.begin(); stmt != stmts.end(); ++stmt) {
-      if (stmt == stmts.begin()) {
-        stmt->get()->visit(*this);
-      } else {
+      if (stmt != stmts.begin()) {
         writer("\n");
-        stmt->get()->visit(*this);
       }
+      stmt->get()->visit(*this);
     }
     // writer("}");
   };

@@ -135,12 +135,28 @@ std::shared_ptr<Eval::Bag> evalArrayIndexExpression(
   return left->values().at(index->value());
 }
 
+std::shared_ptr<Eval::Bag> evalHashIndexExpression(
+    std::shared_ptr<Eval::HashBag> left, std::shared_ptr<Eval::Bag> index) {
+  auto hash = index->hash();
+  if (!hash) {
+    return makeInvalidHashKeyType(index->type());
+  }
+  auto pair = left->pairs().find(*hash);
+  if (pair == left->pairs().end()) {
+    return NULL_BAG;
+  }
+  return pair->second.value();
+}
+
 std::shared_ptr<Eval::Bag> evalIndexExpression(
     std::shared_ptr<Eval::Bag> left, std::shared_ptr<Eval::Bag> index) {
   if (left->type() == Eval::Type::ARRAY_OBJ &&
       index->type() == Eval::Type::INTEGER_OBJ) {
     return evalArrayIndexExpression(convertToArray(left),
                                     convertToInteger(index));
+  }
+  if (left->type() == Eval::Type::HASH_OBJ) {
+    return evalHashIndexExpression(convertToHash(left), index);
   }
   return makeInvalidIndexException(left->type(), index->type());
 }
@@ -211,6 +227,31 @@ std::shared_ptr<Eval::Bag> evalIfExpression(
     bag = ASTEvaluator::eval(*node.getWhenFalse(), env);
   }
   return bag;
+}
+
+std::shared_ptr<Eval::Bag> evalHashLiteral(
+    AST::HashLiteral &node, std::shared_ptr<Env::Environment> env) {
+  std::shared_ptr<Eval::Bag> bag = NULL_BAG;
+  spdlog::get(EVAL_LOGGER)
+      ->info("Evaluating hash {} expression", Eval::typeToString(bag->type()));
+  std::map<Eval::HashKey, Eval::HashPair> hashMap;
+  for (auto pair : node.getPairs()) {
+    auto key = ASTEvaluator::eval(*pair.first, env);
+    if (isError(key)) {
+      return key;
+    }
+    auto keyHash = key->hash();
+    if (!keyHash) {
+      return makeInvalidHashKeyType(key->type());
+    }
+    auto value = ASTEvaluator::eval(*pair.second, env);
+    if (isError(value)) {
+      return value;
+    }
+    Eval::HashPair hashPair(key, value);
+    hashMap.insert(std::make_pair(*keyHash, std::move(hashPair)));
+  }
+  return std::make_shared<Eval::HashBag>(hashMap);
 }
 
 std::shared_ptr<Eval::Bag> evalProgram(
@@ -393,6 +434,9 @@ void ASTEvaluator::dispatch(AST::IfExpression &node) {
 };
 void ASTEvaluator::dispatch(AST::FunctionLiteral &node) {
   bag = makeFunctionBag(env, node.getArguments(), node.getBody());
+}
+void ASTEvaluator::dispatch(AST::HashLiteral &node) {
+  bag = evalHashLiteral(node, env);
 }
 void ASTEvaluator::dispatch(AST::CallExpression &node) {
   auto val = eval(*node.getFunction(), env);
