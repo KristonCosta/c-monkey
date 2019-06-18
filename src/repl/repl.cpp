@@ -19,8 +19,10 @@ void run() {
     if (line.size() > 0 && line.at(0) == '@') {
       auto file = line.substr(1, std::string::npos);
       auto installDir = std::getenv("CMONKEY_INSTALL_DIR");
-      if (installDir == NULL) {
-        fmt::print("ERROR: CMONKEY_INSTALL_DIR not set!");
+      if (!installDir) {
+        fmt::print("ERROR: CMONKEY_INSTALL_DIR not set!\n");
+        fmt::print("{}", prompt);
+        continue;
       }
       std::stringstream ss;
       ss << installDir << file;
