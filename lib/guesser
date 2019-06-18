@@ -1,11 +1,11 @@
 let guess = fn(val) {
   if (val > 100) {
     print("Please enter a number in the range [0,100]")
-    return;
+    return
   }
   if (val < 0) {
     print("Please enter a number in the range [0,100]")
-    return;
+    return
   }
   let iter = fn(val, hi, lo) {
     let guess = (hi + lo) / 2

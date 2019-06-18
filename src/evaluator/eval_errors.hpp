@@ -70,3 +70,9 @@ inline std::shared_ptr<Eval::ErrorBag> makeInvalidHashKeyType(
   return makeErrorWithMessage(fmt::format("hash key type is not supported: {}",
                                           Eval::typeToString(keyType)));
 }
+
+inline std::shared_ptr<Eval::ErrorBag> makeDivideByZeroError(int64_t numer,
+                                                             int64_t denom) {
+  return makeErrorWithMessage(
+      fmt::format("divide by zero exception: {}/{}", numer, denom));
+}

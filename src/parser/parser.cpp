@@ -367,6 +367,9 @@ std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
       ->info("Parsing return statement for {} ", *this->currentToken);
   auto tok = this->currentToken;
 
+  if (this->peekTokenIs(TokenType::RBRACE)) {
+    return std::make_shared<AST::ReturnStatement>(tok, nullptr);
+  }
   this->nextToken();
   if (this->currentTokenIs(TokenType::SEMICOLON)) {
     return std::make_shared<AST::ReturnStatement>(tok, nullptr);

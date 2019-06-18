@@ -1,4 +1,12 @@
-let map = fn(arr, f) {
+let add = fn(x, y) { x + y }
+
+let sub = fn(x, y) { x - y }
+
+let mul = fn(x, y) { x * y }
+
+let div = fn(x, y) { x / y }
+
+let map = fn(f, arr) {
   let iter = fn(arr, acc) {
     if (len(arr) == 0) {
       acc
@@ -9,7 +17,7 @@ let map = fn(arr, f) {
   iter(arr, []);
 };
 
-let reduce = fn(arr, initial, f) {
+let reduce = fn(f, initial, arr) {
   let iter = fn(arr, res) {
     if (len(arr) == 0) {
       res
@@ -20,7 +28,7 @@ let reduce = fn(arr, initial, f) {
   iter(arr, initial);
 };
 
-let join = fn(arr, sep) {
+let join = fn(sep, arr) {
   let iter = fn(arr, sep, res) {
     if (len(arr) == 0) {
       res
@@ -35,7 +43,7 @@ let join = fn(arr, sep) {
   }
 }
 
-let filter = fn(arr, cond) {
+let filter = fn(cond, arr) {
   let iter = fn(arr, acc) {
     if (len(arr) == 0) {
       acc
@@ -59,4 +67,19 @@ let range = fn(start, end) {
     }
   }
   iter(start, end, []);
+}
+
+let fold = fn(op, arr) {
+  let iter = fn(arr, op, acc) {
+    if(len(arr) == 0) {
+      acc
+    } else {
+      iter(tail(arr), op, op(acc, head(arr)))
+    }
+  }
+  if (len(arr) == 0) {
+    return
+  } else {
+    iter(tail(arr), op, head(arr))
+  }
 }

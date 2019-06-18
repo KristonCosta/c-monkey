@@ -4,6 +4,7 @@
 #include <eval_errors.hpp>
 #include <sstream>
 #include <string>
+#include <vector>
 #include "ast.hpp"
 #include "builtin.hpp"
 #include "spdlog/sinks/null_sink.h"
@@ -89,6 +90,9 @@ std::shared_ptr<Eval::Bag> evalIntegerInfixExpression(
   } else if (op == "*") {
     return makeIntegerBag(left->value() * right->value());
   } else if (op == "/") {
+    if (right->value() == 0) {
+      return makeDivideByZeroError(left->value(), right->value());
+    }
     return makeIntegerBag(left->value() / right->value());
   } else if (op == "<") {
     return getBooleanBag(left->value() < right->value());
@@ -303,6 +307,12 @@ std::shared_ptr<Eval::Bag> applyFunction(
       identIter++;
     }
     auto wrappedEnv = std::make_shared<Env::Environment>(func->env(), args);
+    if (args.size() < func->arguments().size()) {
+      // We have a partial function
+      std::vector<std::shared_ptr<AST::Identifier>> remainingArgs(
+          func->arguments().cbegin() + args.size(), func->arguments().cend());
+      return makeFunctionBag(wrappedEnv, remainingArgs, func->body());
+    }
     auto ret = ASTEvaluator::eval(*func->body(), wrappedEnv);
     if (ret->type() == Eval::Type::RETURN_OBJ) {
       return convertToReturn(ret)->value();

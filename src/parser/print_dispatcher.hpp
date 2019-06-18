@@ -1,6 +1,5 @@
 #pragma once
 #include <spdlog/fmt/ostr.h>
-#include <iostream>
 #include <sstream>
 #include <string>
 #include "ast.hpp"
@@ -115,8 +114,6 @@ class ASTPrinter : public AST::AbstractDispatcher {
         writer(", ");
       }
       arg->get()->visit(*this);
-      std::cout << "Writing argument " << arg->get()->toDebugString()
-                << std::endl;
     }
     writer(") ");
     node.getBody()->visit(*this);
