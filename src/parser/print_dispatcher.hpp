@@ -143,7 +143,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer(";");
   };
   virtual void dispatch(AST::BlockStatement &node) override {
-    // writer("{ ");
+    writer("{ ");
     auto stmts = node.getStatements();
     for (auto stmt = stmts.begin(); stmt != stmts.end(); ++stmt) {
       if (stmt != stmts.begin()) {
@@ -151,7 +151,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
       }
       stmt->get()->visit(*this);
     }
-    // writer("}");
+    writer("}");
   };
 
   static void write(WriterFn writer, AST::Node &n) {

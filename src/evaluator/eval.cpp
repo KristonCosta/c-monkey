@@ -476,11 +476,13 @@ void ASTEvaluator::dispatch(AST::LetStatement &node) {
     return;
   }
 
-  spdlog::get(EVAL_LOGGER)->info("Setting let statement {}", env);
+  spdlog::get(EVAL_LOGGER)
+      ->info("Setting let statement {} {}", node.getName()->getValue(),
+             val->inspect());
   env->set(node.getName()->getValue(), val);
   spdlog::get(EVAL_LOGGER)->info("Set let statement");
 
-  bag = nullptr;
+  bag = NULL_BAG;
 };
 void ASTEvaluator::dispatch(AST::BlockStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating block expression");

@@ -19,3 +19,33 @@ let reduce = fn(arr, initial, f) {
   };
   iter(arr, initial);
 };
+
+let join = fn(arr, sep) {
+  let iter = fn(arr, sep, res) {
+    if (len(arr) == 0) {
+      res
+    } else {
+      iter(tail(arr), sep, sprint(res, sep, head(arr)));
+    }
+  }
+  if (len(arr) == 0) {
+    ""
+  } else {
+    iter(tail(arr), sep, head(arr))
+  }
+}
+
+let filter = fn(arr, cond) {
+  let iter = fn(arr, acc) {
+    if (len(arr) == 0) {
+      acc
+    } else {
+      if (cond(head(arr))) {
+        iter(tail(arr), push(acc, head(arr)))
+      } else {
+        iter(tail(arr), acc)
+      }
+    }
+  };
+  iter(arr, []);
+}
