@@ -83,3 +83,18 @@ let fold = fn(op, arr) {
     iter(tail(arr), op, head(arr))
   }
 }
+
+let wfold = fn(op, arr) {
+  if (len(arr) != 0) {  
+    let acc = head(arr)
+    let arr = tail(arr)
+    while {
+      if (len(arr) == 0) {
+        return acc
+      }
+      print(acc)
+      let acc = op(acc, head(arr)) 
+      let arr = tail(arr)
+    }
+  }
+}

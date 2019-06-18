@@ -20,7 +20,7 @@ class ASTEvaluator : public AST::AbstractDispatcher {
     if (!spdlog::get(EVAL_OUTPUT)) {
       auto output = spdlog::stdout_color_mt(EVAL_OUTPUT);
       output->set_pattern("%v");
-      output->flush_on(spdlog::level::trace);
+      output->flush_on(spdlog::level::info);
     }
   };
   std::shared_ptr<Eval::Bag> bag = nullptr;
@@ -41,6 +41,7 @@ class ASTEvaluator : public AST::AbstractDispatcher {
   virtual void dispatch(AST::PrefixExpression &node) override;
   virtual void dispatch(AST::InfixExpression &node) override;
   virtual void dispatch(AST::IfExpression &node) override;
+  virtual void dispatch(AST::WhileExpression &node) override;
   virtual void dispatch(AST::FunctionLiteral &node) override;
   virtual void dispatch(AST::CallExpression &node) override;
   virtual void dispatch(AST::ReturnStatement &node) override;

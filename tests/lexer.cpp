@@ -14,6 +14,7 @@ let result = add(five, ten);
 let x = "test 123 five!";
 [1, 2];
 {"test":"map"};
+while(true);
 )V0G0N";
 
   Pair testPairs[] = {
@@ -69,6 +70,11 @@ let x = "test 123 five!";
       Pair{TokenType::COLON, ":"},
       Pair{TokenType::STRING, "map"},
       Pair{TokenType::RBRACE, "}"},
+      Pair{TokenType::SEMICOLON, ";"},
+      Pair{TokenType::WHILE, "while"},
+      Pair{TokenType::LPAREN, "("},
+      Pair{TokenType::TRUE, "true"},
+      Pair{TokenType::RPAREN, ")"},
       Pair{TokenType::SEMICOLON, ";"},
       Pair{TokenType::END_OF_FILE, std::string(1, '\0')},
   };

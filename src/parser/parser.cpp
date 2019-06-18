@@ -276,12 +276,22 @@ std::shared_ptr<AST::Expression> Parser::parseIfExpression() {
     if (!this->expectPeek(TokenType::LBRACE)) {
       return nullptr;
     }
-    return std::make_shared<AST::IfExpression>(
-        tok, cond, whenTrue,
-        std::dynamic_pointer_cast<AST::BlockStatement>(
-            this->parseBlockStatement()));
+    whenFalse = std::dynamic_pointer_cast<AST::BlockStatement>(
+        this->parseBlockStatement());
   }
-  return std::make_shared<AST::IfExpression>(tok, cond, whenTrue, nullptr);
+  return std::make_shared<AST::IfExpression>(tok, cond, whenTrue, whenFalse);
+}
+
+std::shared_ptr<AST::Expression> Parser::parseWhileExpression() {
+  spdlog::get(PARSER_LOGGER)
+      ->info("Parsing while expression for {} ", *this->currentToken);
+  auto tok = this->currentToken;
+  if (!this->expectPeek(TokenType::LBRACE)) {
+    return nullptr;
+  }
+  auto body = std::dynamic_pointer_cast<AST::BlockStatement>(
+      this->parseBlockStatement());
+  return std::make_shared<AST::WhileExpression>(tok, body);
 }
 
 std::shared_ptr<AST::Expression> Parser::parseFunctionLiteral() {

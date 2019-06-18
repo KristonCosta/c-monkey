@@ -106,6 +106,10 @@ class ASTPrinter : public AST::AbstractDispatcher {
       node.getWhenFalse()->visit(*this);
     }
   };
+  virtual void dispatch(AST::WhileExpression &node) override {
+    writer("while ");
+    node.getBody()->visit(*this);
+  };
   virtual void dispatch(AST::FunctionLiteral &node) override {
     writer(fmt::format("{}(", node.tokenLiteral()));
     auto args = node.getArguments();

@@ -217,7 +217,7 @@ std::shared_ptr<Eval::Bag> evalIfExpression(
     AST::IfExpression &node, std::shared_ptr<Env::Environment> env) {
   std::shared_ptr<Eval::Bag> bag = NULL_BAG;
   spdlog::get(EVAL_LOGGER)
-      ->info("Evaluating when {} expression", Eval::typeToString(bag->type()));
+      ->info("Evaluating {} expression", Eval::typeToString(bag->type()));
 
   auto condition = ASTEvaluator::eval(*node.getCondition(), env);
   if (isError(condition)) {
@@ -231,6 +231,17 @@ std::shared_ptr<Eval::Bag> evalIfExpression(
     bag = ASTEvaluator::eval(*node.getWhenFalse(), env);
   }
   return bag;
+}
+
+std::shared_ptr<Eval::Bag> evalWhileExpression(
+    AST::WhileExpression &node, std::shared_ptr<Env::Environment> env) {
+  std::shared_ptr<Eval::Bag> bag = NULL_BAG;
+  spdlog::get(EVAL_LOGGER)->info("Evaluating while expression");
+  auto wrappedEnv = std::make_shared<Env::Environment>(env);
+  while (bag->type() != Eval::Type::RETURN_OBJ) {
+    bag = ASTEvaluator::eval(*node.getBody(), env);
+  }
+  return convertToReturn(bag)->value();
 }
 
 std::shared_ptr<Eval::Bag> evalHashLiteral(
@@ -441,6 +452,11 @@ void ASTEvaluator::dispatch(AST::IfExpression &node) {
   bag = evalIfExpression(node, env);
   spdlog::get(EVAL_LOGGER)
       ->info("Returning if of type {}", Eval::typeToString(bag->type()));
+};
+
+void ASTEvaluator::dispatch(AST::WhileExpression &node) {
+  spdlog::get(EVAL_LOGGER)->info("Evaluating while expression");
+  bag = evalWhileExpression(node, env);
 };
 void ASTEvaluator::dispatch(AST::FunctionLiteral &node) {
   bag = makeFunctionBag(env, node.getArguments(), node.getBody());

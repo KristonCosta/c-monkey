@@ -222,6 +222,17 @@ std::string IfExpression::toDebugString() const {
   return ss.str();
 };
 
+std::shared_ptr<BlockStatement> &WhileExpression::getBody() {
+  return this->body;
+};
+
+std::string WhileExpression::toDebugString() const {
+  std::stringstream ss;
+  ss << "[while token=" << *this->token
+     << " body=" << this->body->toDebugString() << "]";
+  return ss.str();
+};
+
 const std::vector<std::shared_ptr<Identifier>> &FunctionLiteral::getArguments()
     const {
   return this->arguments;

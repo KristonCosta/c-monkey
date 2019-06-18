@@ -41,6 +41,13 @@ inline AST::IndexExpression *testIndexExpression(
   return expression;
 }
 
+inline AST::WhileExpression *testWhileExpression(
+    std::shared_ptr<AST::Expression> node) {
+  const auto expression = dynamic_cast<AST::WhileExpression *>(node.get());
+  REQUIRE(expression);
+  return expression;
+}
+
 inline AST::LetStatement *testLetStatement(AST::Statement *node,
                                            const std::string &str) {
   REQUIRE(node->tokenLiteral() == "let");

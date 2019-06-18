@@ -16,7 +16,7 @@ std::map<std::string, TokenType> keywords = {
     {"fn", TokenType::FUNCTION},   {"let", TokenType::LET},
     {"true", TokenType::TRUE},     {"false", TokenType::FALSE},
     {"if", TokenType::IF},         {"else", TokenType::ELSE},
-    {"return", TokenType::RETURN},
+    {"return", TokenType::RETURN}, {"while", TokenType::WHILE},
 };
 
 TokenType lookupIdentity(std::string identity) {
@@ -91,6 +91,8 @@ std::string tokenTypeToString(TokenType type) {
       return "LBRACKET";
     case TokenType::COLON:
       return "COLON";
+    case TokenType::WHILE:
+      return "WHILE ";
   }
   throw "Token type doesn't exist!";
 }

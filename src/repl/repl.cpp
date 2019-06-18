@@ -53,8 +53,8 @@ void run() {
 
     /*
     std::stringstream ss;
-    ASTPrinter::write([&](std::string message) { ss << message; }, *program);
-    fmt::print("{}\n", ss.str());
+    ASTPrinter::write([&](std::string message) { ss << message; },
+    *program); fmt::print("{}\n", ss.str());
     */
     fmt::print("{}", prompt);
   }

@@ -26,6 +26,7 @@ class IndexExpression;
 class PrefixExpression;
 class InfixExpression;
 class IfExpression;
+class WhileExpression;
 class CallExpression;
 
 class ReturnStatement;
@@ -53,6 +54,7 @@ class AbstractDispatcher {
   virtual void dispatch(PrefixExpression &node) = 0;
   virtual void dispatch(InfixExpression &node) = 0;
   virtual void dispatch(IfExpression &node) = 0;
+  virtual void dispatch(WhileExpression &node) = 0;
   virtual void dispatch(FunctionLiteral &node) = 0;
   virtual void dispatch(CallExpression &node) = 0;
 
@@ -316,6 +318,22 @@ class IfExpression : public Expression {
   std::shared_ptr<Expression> &getCondition();
   std::shared_ptr<BlockStatement> &getWhenTrue();
   std::shared_ptr<BlockStatement> &getWhenFalse();
+  virtual std::string toDebugString() const override;
+  void visit(AbstractDispatcher &dispatcher) override {
+    dispatcher.dispatch(*this);
+  }
+};
+
+class WhileExpression : public Expression {
+  std::shared_ptr<BlockStatement> body;
+
+ public:
+  WhileExpression(std::shared_ptr<Token> token,
+                  std::shared_ptr<BlockStatement> body)
+      : body(body) {
+    this->token = token;
+  };
+  std::shared_ptr<BlockStatement> &getBody();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);

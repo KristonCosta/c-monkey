@@ -235,6 +235,15 @@ TEST_CASE("Array builtins array", "[eval]") {
   }
 }
 
+TEST_CASE("While eval testing", "[eval]") {
+  std::string input =
+      "let x = 1; while { if ( x > 3 ) { return x; }; let x = x + 1; }; x ";
+  auto program = testProgramWithInput(input);
+  auto env = std::make_shared<Env::Environment>();
+  auto bag = ASTEvaluator::eval(*program, env);
+  testIntegerBag(bag, 4);
+}
+
 TEST_CASE("Array eval testing", "[eval]") {
   // spdlog::stdout_color_mt(EVAL_LOGGER);
   auto input = "[1, 2 + 2, 3 * 3]";

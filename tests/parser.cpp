@@ -203,6 +203,18 @@ TEST_CASE("Empty hash literal parsing", "[parser]") {
   REQUIRE(hash->getPairs().size() == 0);
 }
 
+TEST_CASE("while expression parsing", "[parser]") {
+  auto input = "while { true; }";
+  auto program = testProgramWithInput(input);
+  REQUIRE(program->size() == 1);
+  auto stmt = program->getStatements().begin();
+  const auto statement = testExpressionStatement(stmt->get());
+  const auto whileStmt = testWhileExpression(statement->getExpression());
+  const auto body = whileStmt->getBody()->getStatements();
+  testBoolean(testExpressionStatement(body.begin()->get())->getExpression(),
+              true);
+}
+
 TEST_CASE("If expression parsing", "[parser]") {
   auto input = "if (x < y) { x }";
   auto program = testProgramWithInput(input);

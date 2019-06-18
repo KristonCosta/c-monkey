@@ -45,6 +45,7 @@ enum class TokenType : std::uint8_t {
   IF = 0x54,
   ELSE = 0x55,
   RETURN = 0x56,
+  WHILE = 0x57,
 };
 
 TokenType lookupIdentity(std::string identity);
