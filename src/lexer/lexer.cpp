@@ -11,7 +11,7 @@ Lexer::Lexer(const std::string& input)
     : input(std::move(input)),
       position(0),
       readPosition(0),
-      currentLine(0),
+      currentLine(1),
       tok('\0'),
       columnOffset(0) {
   if (!spdlog::get(LEXER_LOGGER)) {

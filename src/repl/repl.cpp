@@ -37,7 +37,9 @@ void run() {
       for (const auto &error : parser.errors()) {
         auto columnNumber = error.token->location->columnNumber;
         std::string padding(error.token->location->columnNumber, ' ');
-        fmt::print("{}{}{}\n{}\n", prompt_indent, padding, "^", error.message);
+        fmt::print("{}{}{}\n{}({}, {})\n", prompt_indent, padding, "^",
+                   error.message, error.token->location->lineNumber,
+                   error.token->location->columnNumber);
       }
       fmt::print("{}", prompt);
       continue;

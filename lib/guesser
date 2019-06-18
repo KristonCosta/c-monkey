@@ -1,0 +1,25 @@
+let guess = fn(val) {
+  if (val > 100) {
+    print("Please enter a number in the range [0,100]")
+    return;
+  }
+  if (val < 0) {
+    print("Please enter a number in the range [0,100]")
+    return;
+  }
+  let iter = fn(val, hi, lo) {
+    let guess = (hi + lo) / 2
+    if (guess == val) {
+      print(sprint("Got the correct answer! ", val));
+    }
+    if (val > guess) {
+      print(sprint("Guessed ", guess, " but it was too low."))
+      iter(val, hi, guess);
+    } 
+    if (val < guess) {
+      print(sprint("Guessed ", guess, " but it was too high."))
+      iter(val, guess, lo);
+    }
+  }
+  iter(val, 101, -1);
+}

@@ -12,6 +12,7 @@ void registerLogger(std::string name, uint suffix) {
   auto logger =
       spdlog::basic_logger_mt(name, fmt::format("{}-{}.log", name, suffix));
   logger->set_level(spdlog::level::info);
+  logger->flush_on(spdlog::level::info);
 }
 
 int main() {

@@ -366,7 +366,11 @@ std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
   spdlog::get(PARSER_LOGGER)
       ->info("Parsing return statement for {} ", *this->currentToken);
   auto tok = this->currentToken;
+
   this->nextToken();
+  if (this->currentTokenIs(TokenType::SEMICOLON)) {
+    return std::make_shared<AST::ReturnStatement>(tok, nullptr);
+  }
   auto ret = this->parseExpression(Precedence::BOTTOM);
   auto stmt = std::make_shared<AST::ReturnStatement>(tok, ret);
   if (this->peekTokenIs(TokenType::SEMICOLON)) {

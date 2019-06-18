@@ -448,6 +448,10 @@ void ASTEvaluator::dispatch(AST::CallExpression &node) {
 }
 void ASTEvaluator::dispatch(AST::ReturnStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating return statement");
+  if (!node.getReturnValue()) {
+    bag = makeReturnBag(NULL_BAG);
+    return;
+  }
   auto ret = eval(*node.getReturnValue(), env);
   if (isError(ret)) {
     bag = ret;
