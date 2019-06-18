@@ -51,7 +51,8 @@ char Lexer::peek() {
 }
 
 std::string Lexer::readIdentifier() {
-  auto sub = this->extactWhile([](char tok) { return isalpha(tok); });
+  auto sub =
+      this->extactWhile([](char tok) { return isalpha(tok) || tok == '_'; });
   spdlog::get(LEXER_LOGGER)->info("Found identifier '{}'", sub);
   return std::move(sub);
 }
