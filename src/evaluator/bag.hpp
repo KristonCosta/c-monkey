@@ -268,9 +268,8 @@ class FunctionBag : public Bag {
                           *arg->get());
       }
     }
-    ss << ") {\n";
+    ss << ") ";
     ASTPrinter::write([&](std::string message) { ss << message; }, *_body);
-    ss << "\n}";
     return ss.str();
   };
   virtual Type type() const override { return Type::FUNC_OBJ; };

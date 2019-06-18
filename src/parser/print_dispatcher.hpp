@@ -1,5 +1,6 @@
 #pragma once
 #include <spdlog/fmt/ostr.h>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include "ast.hpp"
@@ -8,8 +9,17 @@ typedef std::function<void(std::string)> WriterFn;
 class ASTPrinter : public AST::AbstractDispatcher {
  private:
   WriterFn writer;
+  uint8_t indentLevel;
+  explicit ASTPrinter(WriterFn writer) : indentLevel(0), writer(writer) {}
+  static const uint8_t PADDING = 2;
+  std::string getPadding() {
+    std::string padding(indentLevel * PADDING, ' ');
+    return padding;
+  }
 
-  explicit ASTPrinter(WriterFn writer) : writer(writer){};
+  void increaseIndent() { indentLevel++; }
+
+  void decreaseIndent() { indentLevel--; }
 
  public:
   virtual void dispatch(AST::Node &node) override {
@@ -50,7 +60,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer(node.tokenLiteral());
   };
   virtual void dispatch(AST::StringLiteral &node) override {
-    writer(node.tokenLiteral());
+    writer("\"" + node.tokenLiteral() + "\"");
   }
   virtual void dispatch(AST::ArrayLiteral &node) override {
     writer("[");
@@ -93,22 +103,22 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer(" ");
     node.getWhenTrue()->visit(*this);
     if (node.getWhenFalse()) {
-      writer("else ");
+      writer(" else ");
       node.getWhenFalse()->visit(*this);
     }
   };
   virtual void dispatch(AST::FunctionLiteral &node) override {
-    writer(fmt::format("{} (", node.tokenLiteral()));
-    std::stringstream ss;
+    writer(fmt::format("{}(", node.tokenLiteral()));
     auto args = node.getArguments();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
-      if (arg != node.getArguments().begin()) {
+      if (arg != args.begin()) {
         writer(", ");
       }
       arg->get()->visit(*this);
+      std::cout << "Writing argument " << arg->get()->toDebugString()
+                << std::endl;
     }
-    writer(")");
-    writer(ss.str());
+    writer(") ");
     node.getBody()->visit(*this);
   }
   virtual void dispatch(AST::CallExpression &node) override {
@@ -129,7 +139,6 @@ class ASTPrinter : public AST::AbstractDispatcher {
       writer(" ");
       node.getReturnValue()->visit(*this);
     }
-    writer(";");
   };
   virtual void dispatch(AST::ExpressionStatement &node) override {
     node.getExpression()->visit(*this);
@@ -140,18 +149,20 @@ class ASTPrinter : public AST::AbstractDispatcher {
     node.getName()->visit(*this);
     writer(" = ");
     node.getValue()->visit(*this);
-    writer(";");
   };
   virtual void dispatch(AST::BlockStatement &node) override {
     writer("{ ");
+    increaseIndent();
     auto stmts = node.getStatements();
     for (auto stmt = stmts.begin(); stmt != stmts.end(); ++stmt) {
-      if (stmt != stmts.begin()) {
-        writer("\n");
-      }
+      writer("\n" + getPadding());
       stmt->get()->visit(*this);
+      if (stmt->get() != stmts.back().get()) {
+        writer(";");
+      }
     }
-    writer("}");
+    decreaseIndent();
+    writer("\n" + getPadding() + "}");
   };
 
   static void write(WriterFn writer, AST::Node &n) {
