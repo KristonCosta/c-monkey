@@ -86,12 +86,23 @@ std::shared_ptr<Eval::Bag> evalPrintBuiltin(
   return Eval::NULL_BAG;
 }
 
+std::shared_ptr<Eval::Bag> evalSPrintBuiltin(
+    const std::string& name,
+    const std::vector<std::shared_ptr<Eval::Bag>>& arguments) {
+  std::stringstream ss;
+  for (const auto& arg : arguments) {
+    ss << arg.get()->inspect();
+  }
+  return std::make_shared<Eval::StringBag>(ss.str());
+}
+
 std::map<std::string, std::shared_ptr<Eval::BuiltinBag>> Builtin::_builtins = {
     {"len", std::make_shared<Eval::BuiltinBag>("len", evalLenBuiltin)},
     {"head", std::make_shared<Eval::BuiltinBag>("head", evalHeadBuiltin)},
     {"tail", std::make_shared<Eval::BuiltinBag>("tail", evalTailBuiltin)},
     {"push", std::make_shared<Eval::BuiltinBag>("push", evalPushBuiltin)},
     {"print", std::make_shared<Eval::BuiltinBag>("print", evalPrintBuiltin)},
+    {"sprint", std::make_shared<Eval::BuiltinBag>("sprint", evalSPrintBuiltin)},
 };
 
 std::shared_ptr<Eval::BuiltinBag> Builtin::get(const std::string& name) {
