@@ -43,6 +43,19 @@ let join = fn(sep, arr) {
   }
 }
 
+let slowMod = fn(b, val) {
+  let iter = fn(b, val) {
+    if (val < b) { 
+      val
+    } else {
+      iter(b, val - b)
+    }
+  }
+  if (val > -1) {
+    iter(b, val)
+  }
+}
+
 let filter = fn(cond, arr) {
   let iter = fn(arr, acc) {
     if (len(arr) == 0) {
