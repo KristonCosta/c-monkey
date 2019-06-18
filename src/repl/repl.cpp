@@ -1,6 +1,8 @@
 #include "repl.hpp"
+#include <cstdlib>
 #include <env.hpp>
 #include <eval.hpp>
+#include <fstream>
 #include <iostream>
 #include <lexer.hpp>
 #include <parser.hpp>
@@ -14,6 +16,20 @@ void run() {
   fmt::print("{}", prompt);
   auto env = std::make_shared<Env::Environment>();
   for (std::string line; std::getline(std::cin, line);) {
+    if (line.size() > 0 && line.at(0) == '@') {
+      auto file = line.substr(1, std::string::npos);
+      auto installDir = std::getenv("CMONKEY_INSTALL_DIR");
+      if (installDir == NULL) {
+        fmt::print("ERROR: CMONKEY_INSTALL_DIR not set!");
+      }
+      std::stringstream ss;
+      ss << installDir << file;
+      fmt::print("Loading {}\n", ss.str());
+      std::ifstream ifs(ss.str());
+      std::string contents((std::istreambuf_iterator<char>(ifs)),
+                           (std::istreambuf_iterator<char>()));
+      line = contents;
+    }
     auto lexer = std::make_unique<Lexer>(line);
     auto parser = Parser(std::move(lexer));
     auto program = parser.parseProgram();
@@ -30,6 +46,7 @@ void run() {
     if (evaluated) {
       fmt::print("{}\n", evaluated->inspect());
     }
+
     /*
     std::stringstream ss;
     ASTPrinter::write([&](std::string message) { ss << message; }, *program);
