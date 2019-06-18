@@ -17,8 +17,16 @@ contexts:
       scope: punctuation.definition.comment.example-c
       push: line_comment
 
+    # Function let statements
+    - match: '\b(let)\s*\b([A-Za-z_][A-Za-z_0-9]*)\s*(=)\s*(fn)'
+      captures:
+        1: keyword.control.example-c
+        2: entity.name.function.example-c
+        3: keyword.operator.example-c
+        4: keyword.control.example-c
+
     # Keywords
-    - match: '\b(if|else|while|let|fn|return)\b'
+    - match: '\b(if|else|while|fn|let|return)\b'
       scope: keyword.control.example-c
 
     # Builtins
@@ -28,6 +36,11 @@ contexts:
     # Numbers
     - match: '\b(-)?[0-9.]+\b'
       scope: constant.numeric.example-c
+
+    # User defined function call
+    - match: '\b([A-Za-z_][A-Za-z_0-9]*)(\()'
+      captures:
+        1: entity.name.function.example-c
 
   double_quoted_string:
     - meta_scope: string.quoted.double.example-c
