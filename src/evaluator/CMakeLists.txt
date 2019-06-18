@@ -1,7 +1,6 @@
 project(CMonkeyEvaluator) 
 
 add_library(${PROJECT_NAME}  
-  bag.cpp
   builtin.cpp
   env.cpp
 	eval.cpp) 
