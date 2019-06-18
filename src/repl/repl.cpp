@@ -45,7 +45,7 @@ void run() {
       continue;
     }
     auto evaluated = ASTEvaluator::eval(*program, env);
-    if (evaluated) {
+    if (evaluated && evaluated->type() != Eval::Type::NULL_OBJ) {
       fmt::print("{}\n", evaluated->inspect());
     }
 

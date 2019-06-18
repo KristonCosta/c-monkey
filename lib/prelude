@@ -49,3 +49,14 @@ let filter = fn(arr, cond) {
   };
   iter(arr, []);
 }
+
+let range = fn(start, end) {
+  let iter = fn(start, end, res) {
+    if (start == end) {
+      res
+    } else {
+      iter(start + 1, end, push(res, start))
+    }
+  }
+  iter(start, end, []);
+}
