@@ -16,6 +16,7 @@ class Lexer {
  private:
   void readChar();
   void skipWhitespace();
+  void skipLine();
   char peek();
   std::string readIdentifier();
   std::string readNumber();

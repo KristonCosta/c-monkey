@@ -42,6 +42,13 @@ void Lexer::skipWhitespace() {
   }
 }
 
+void Lexer::skipLine() {
+  while (this->tok != '\n' && this->tok != '\0') {
+    this->readChar();
+  }
+  this->skipWhitespace();
+}
+
 char Lexer::peek() {
   if (this->readPosition >= this->input.size()) {
     return '\0';
@@ -51,8 +58,8 @@ char Lexer::peek() {
 }
 
 std::string Lexer::readIdentifier() {
-  auto sub =
-      this->extactWhile([](char tok) { return isalpha(tok) || tok == '_'; });
+  auto sub = this->extactWhile(
+      [](char tok) { return isalpha(tok) || tok == '_' || isdigit(tok); });
   spdlog::get(LEXER_LOGGER)->info("Found identifier '{}'", sub);
   return std::move(sub);
 }
@@ -77,6 +84,12 @@ std::shared_ptr<Token> Lexer::nextToken() {
   TokenType type = TokenType::ILLEGAL;
   std::string literal = std::string(1, this->tok);
   auto position = this->position;
+
+  while (this->tok == '/' && this->peek() == '/') {
+    spdlog::get(LEXER_LOGGER)
+        ->info("Found comment skipping line '{}'", this->tok);
+    this->skipLine();
+  }
 
   switch (this->tok) {
     case '=':

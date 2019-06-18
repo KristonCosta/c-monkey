@@ -1,10 +1,18 @@
+// Guess will attempt to guess the value provided to it
+// and print its attempts.
+//
+// input: 
+//  val - some integer [0,10000]
+// output: 
+//  void
+
 let guess = fn(val) {
-  if (val > 100) {
-    print("Please enter a number in the range [0,100]")
+  if (val > 10000) {
+    print("Please enter a number in the range [0,10000]")
     return
   }
   if (val < 0) {
-    print("Please enter a number in the range [0,100]")
+    print("Please enter a number in the range [0,10000]")
     return
   }
   let iter = fn(val, hi, lo) {
@@ -21,5 +29,5 @@ let guess = fn(val) {
       iter(val, guess, lo);
     }
   }
-  iter(val, 101, -1);
+  iter(val, 10001, -1);
 }

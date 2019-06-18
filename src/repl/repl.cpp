@@ -25,7 +25,7 @@ void run() {
         continue;
       }
       std::stringstream ss;
-      ss << installDir << file;
+      ss << installDir << file << ".monkey";
       fmt::print("Loading {}\n", ss.str());
       std::ifstream ifs(ss.str());
       std::string contents((std::istreambuf_iterator<char>(ifs)),
