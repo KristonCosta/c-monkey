@@ -2,15 +2,16 @@
 #include <catch2/catch.hpp>
 #include <iostream>
 #include <map>
+#include <utility>
 
 Token::Token(std::unique_ptr<Location> location, TokenType type, char token)
-    : location(std::move(location)),
-      type(type),
-      literal(std::string(1, token)) {}
+    : type(type),
+      literal(std::string(1, token)),
+      location(std::move(location)) {}
 
 Token::Token(std::unique_ptr<Location> location, TokenType type,
-             const std::string literal)
-    : location(std::move(location)), type(type), literal(std::move(literal)) {}
+             std::string  literal)
+    : type(type), literal(std::move(literal)), location(std::move(location)) {}
 
 std::map<std::string, TokenType> keywords = {
     {"fn", TokenType::FUNCTION},   {"let", TokenType::LET},
@@ -19,7 +20,7 @@ std::map<std::string, TokenType> keywords = {
     {"return", TokenType::RETURN}, {"while", TokenType::WHILE},
 };
 
-TokenType lookupIdentity(std::string identity) {
+TokenType lookupIdentity(const std::string& identity) {
   auto lookup = keywords.find(identity);
   if (lookup != keywords.end()) {
     return lookup->second;
@@ -94,5 +95,4 @@ std::string tokenTypeToString(TokenType type) {
     case TokenType::WHILE:
       return "WHILE ";
   }
-  throw "Token type doesn't exist!";
 }

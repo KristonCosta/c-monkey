@@ -2,10 +2,11 @@
 #include <spdlog/fmt/ostr.h>
 #include <string>
 #include <token.hpp>
+#include <utility>
 
 struct ParserError {
-  ParserError(const std::shared_ptr<Token> &token, const std::string &message)
-      : token(token), message(message){};
+  ParserError(std::shared_ptr<Token> token, std::string message)
+      : token(std::move(token)), message(std::move(message)){};
   std::shared_ptr<Token> token;
   std::string message;
   template <typename OStream>

@@ -41,8 +41,8 @@ class Parser {
 
   void nextToken();
   bool expectPeek(TokenType type);
-  bool currentTokenIs(TokenType type) const;
-  bool peekTokenIs(TokenType type) const;
+  [[nodiscard]] bool currentTokenIs(TokenType type) const;
+  [[nodiscard]] bool peekTokenIs(TokenType type) const;
 
   std::shared_ptr<AST::Statement> parseStatement();
   std::shared_ptr<AST::Statement> parseLetStatement();
@@ -96,17 +96,14 @@ class Parser {
       this->nextToken();
       *(out++) = parseExpression(Precedence::BOTTOM);
     }
-    if (!this->expectPeek(endToken)) {
-      return false;
-    }
-    return true;
+    return this->expectPeek(endToken);
   }
 
   Precedence peekPrecedence();
   Precedence currentPrecedence();
 
-  void addError(std::shared_ptr<Token> token, std::string message) {
-    this->_errors.push_back(ParserError(token, message));
+  void addError(const std::shared_ptr<Token>& token, std::string message) {
+    this->_errors.emplace_back(token, message);
   }
 
  public:

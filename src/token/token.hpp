@@ -48,7 +48,7 @@ enum class TokenType : std::uint8_t {
   WHILE = 0x57,
 };
 
-TokenType lookupIdentity(std::string identity);
+TokenType lookupIdentity(const std::string& identity);
 std::string tokenTypeToString(TokenType type);
 
 struct Location {
@@ -70,7 +70,7 @@ class Token {
   const std::unique_ptr<Location> location;
   Token(std::unique_ptr<Location> location, TokenType type, char token);
   Token(std::unique_ptr<Location> location, TokenType type,
-        std::string literal);
+        std::string  literal);
   template <typename OStream>
   friend OStream &operator<<(OStream &os, const Token &c) {
     return os << "[token location" << *c.location

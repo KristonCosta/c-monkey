@@ -33,7 +33,6 @@ std::string precedenceToString(Precedence prec) {
     case Precedence::INDEX:
       return "INDEX";
   }
-  return "UNKNOWN";
 }
 
 void Parser::nextToken() {
@@ -73,8 +72,8 @@ std::unique_ptr<AST::Program> Parser::parseProgram() {
           ->info("Null statement found for {}", this->currentToken);
     }
     this->nextToken();
-  };
-  return std::move(program);
+  }
+  return program;
 }
 
 std::shared_ptr<AST::Statement> Parser::parseStatement() {
@@ -100,9 +99,9 @@ std::shared_ptr<AST::Expression> Parser::parseArrayLiteral() {
     return nullptr;
   }
   auto array = std::make_shared<AST::ArrayLiteral>(tok);
-  for (auto arg : args) {
+  for (const auto& arg : args) {
     array->addValue(arg);
-  };
+  }
   return array;
 }
 
@@ -154,7 +153,7 @@ std::shared_ptr<AST::Statement> Parser::parseExpressionStatement() {
       tok, this->parseExpression(Precedence::BOTTOM));
   if (this->peekTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
-  };
+  }
   return stmt;
 }
 
@@ -187,7 +186,7 @@ std::shared_ptr<AST::Expression> Parser::parseExpression(Precedence prec) {
         ->info("Found infix function {}", *this->currentToken);
     auto infixFn = infixFnPair->second;
     left = (this->*infixFn)(left);
-  };
+  }
   return left;
 }
 
@@ -313,7 +312,7 @@ std::shared_ptr<AST::Expression> Parser::parseFunctionLiteral() {
   auto body = this->parseBlockStatement();
   auto fn = std::make_shared<AST::FunctionLiteral>(
       tok, std::dynamic_pointer_cast<AST::BlockStatement>(body));
-  for (auto arg : args) {
+  for (const auto& arg : args) {
     std::shared_ptr<AST::Identifier> ident =
         convertExpressionToType<AST::Identifier>(arg);
     if (ident) {
@@ -321,7 +320,7 @@ std::shared_ptr<AST::Expression> Parser::parseFunctionLiteral() {
     } else {
       return nullptr;
     }
-  };
+  }
   return fn;
 }
 
@@ -366,9 +365,9 @@ std::shared_ptr<AST::Expression> Parser::parseCallExpression(
     return nullptr;
   }
   auto fn = std::make_shared<AST::CallExpression>(tok, func);
-  for (auto arg : args) {
+  for (const auto& arg : args) {
     fn->addArgument(arg);
-  };
+  }
   return fn;
 }
 
@@ -388,7 +387,7 @@ std::shared_ptr<AST::Statement> Parser::parseReturnStatement() {
   auto stmt = std::make_shared<AST::ReturnStatement>(tok, ret);
   if (this->peekTokenIs(TokenType::SEMICOLON)) {
     this->nextToken();
-  };
+  }
   return stmt;
 }
 

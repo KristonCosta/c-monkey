@@ -67,8 +67,7 @@ std::shared_ptr<Eval::Bag> evalBangOperator(std::shared_ptr<Eval::Bag> right) {
       return TRUE_BAG;
     default:
       return FALSE_BAG;
-  };
-  return makePrefixOperatorError(right->type(), "!");
+  }
 }
 
 std::shared_ptr<Eval::Bag> evalNegateOperator(
@@ -346,19 +345,19 @@ std::shared_ptr<Eval::Bag> applyFunction(
 
 void ASTEvaluator::dispatch(AST::Node &node){
 
-};
+}
 void ASTEvaluator::dispatch(AST::Statement &node){
 
-};
+}
 void ASTEvaluator::dispatch(AST::Expression &node){
 
-};
+}
 void ASTEvaluator::dispatch(AST::Program &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating program");
   auto statements = node.getStatements();
   bag = evalProgram(statements, env);
   spdlog::get(EVAL_LOGGER)->info("Finished evaulating program");
-};
+}
 void ASTEvaluator::dispatch(AST::Identifier &node) {
   spdlog::get(EVAL_LOGGER)->info("Fetching identifier {}", node.getValue());
   auto val = env->get(node.getValue());
@@ -371,20 +370,20 @@ void ASTEvaluator::dispatch(AST::Identifier &node) {
     }
     bag = makeIdentifierNotFoundError(node.getValue());
   }
-};
+}
 void ASTEvaluator::dispatch(AST::Boolean &node) {
   spdlog::get(EVAL_LOGGER)->info("Fetching boolean {}", node.getValue());
   bag = std::make_shared<Eval::BooleanBag>(node.getValue());
-};
+}
 void ASTEvaluator::dispatch(AST::IntegerLiteral &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Creating integer literal {}", node.getValue());
   bag = std::make_shared<Eval::IntegerBag>(node.getValue());
-};
+}
 void ASTEvaluator::dispatch(AST::StringLiteral &node) {
   spdlog::get(EVAL_LOGGER)->info("Creating string literal {}", node.getValue());
   bag = std::make_shared<Eval::StringBag>(node.getValue());
-};
+}
 void ASTEvaluator::dispatch(AST::ArrayLiteral &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating array literal");
   std::vector<std::shared_ptr<Eval::Bag>> args;
@@ -397,7 +396,7 @@ void ASTEvaluator::dispatch(AST::ArrayLiteral &node) {
     args.push_back(evalVal);
   }
   bag = makeArrayBag(args);
-};
+}
 void ASTEvaluator::dispatch(AST::IndexExpression &node) {
   auto left = eval(*node.getLeft(), env);
   if (isError(left)) {
@@ -410,7 +409,7 @@ void ASTEvaluator::dispatch(AST::IndexExpression &node) {
     return;
   }
   bag = evalIndexExpression(left, index);
-};
+}
 void ASTEvaluator::dispatch(AST::PrefixExpression &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating prefix expression {}", node.getOp());
@@ -429,7 +428,7 @@ void ASTEvaluator::dispatch(AST::PrefixExpression &node) {
     }
     bag = evalNegateOperator(right);
   }
-};
+}
 void ASTEvaluator::dispatch(AST::InfixExpression &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating infix expression {}", node.getOp());
@@ -445,19 +444,19 @@ void ASTEvaluator::dispatch(AST::InfixExpression &node) {
   }
 
   bag = evalInfixExpression(node.getOp(), left, right);
-  spdlog::get(EVAL_LOGGER)
-      ->info("Returning infix statement {}", bag->inspect());
-};
+  // spdlog::get(EVAL_LOGGER)
+   //   ->info("Returning infix statement {}", bag->inspect());
+}
 void ASTEvaluator::dispatch(AST::IfExpression &node) {
   bag = evalIfExpression(node, env);
   spdlog::get(EVAL_LOGGER)
       ->info("Returning if of type {}", Eval::typeToString(bag->type()));
-};
+}
 
 void ASTEvaluator::dispatch(AST::WhileExpression &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating while expression");
   bag = evalWhileExpression(node, env);
-};
+}
 void ASTEvaluator::dispatch(AST::FunctionLiteral &node) {
   bag = makeFunctionBag(env, node.getArguments(), node.getBody());
 }
@@ -484,12 +483,12 @@ void ASTEvaluator::dispatch(AST::ReturnStatement &node) {
     return;
   }
   bag = makeReturnBag(ret);
-};
+}
 void ASTEvaluator::dispatch(AST::ExpressionStatement &node) {
   spdlog::get(EVAL_LOGGER)
       ->info("Evaluating expression statement {}", node.tokenLiteral());
   bag = eval(*node.getExpression(), env);
-};
+}
 void ASTEvaluator::dispatch(AST::LetStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating let statement");
   if (Builtin::contains(node.getName()->getValue())) {
@@ -502,16 +501,16 @@ void ASTEvaluator::dispatch(AST::LetStatement &node) {
     return;
   }
 
-  spdlog::get(EVAL_LOGGER)
-      ->info("Setting let statement {} {}", node.getName()->getValue(),
-             val->inspect());
+ //  spdlog::get(EVAL_LOGGER)
+  //    ->info("Setting let statement {} {}", node.getName()->getValue(),
+  //           val->inspect());
   env->set(node.getName()->getValue(), val);
   spdlog::get(EVAL_LOGGER)->info("Set let statement");
 
   bag = NULL_BAG;
-};
+}
 void ASTEvaluator::dispatch(AST::BlockStatement &node) {
   spdlog::get(EVAL_LOGGER)->info("Evaluating block expression");
   auto statements = node.getStatements();
   bag = evalBlockStatement(statements, env);
-};
+}

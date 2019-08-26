@@ -1,14 +1,16 @@
 #include "ast.hpp"
 
+#include <utility>
+
 using namespace AST;
 
 std::string Statement::toDebugString() const {
   return fmt::format("[statement literal={}]", this->tokenLiteral());
-};
+}
 
 std::string Expression::toDebugString() const {
   return fmt::format("[expression literal={}]", this->tokenLiteral());
-};
+}
 
 /*
 
@@ -20,18 +22,18 @@ const std::vector<std::shared_ptr<Statement>> &Program::getStatements() const {
   return this->statements;
 }
 
-const uint64_t Program::size() { return this->statements.size(); };
+uint64_t Program::size() { return this->statements.size(); }
 
-void Program::addStatement(std::shared_ptr<Statement> statement) {
+void Program::addStatement(const std::shared_ptr<Statement>& statement) {
   this->statements.push_back(statement);
-};
+}
 
 std::string Program::tokenLiteral() const {
   if (!this->statements.empty()) {
     return this->statements.front()->tokenLiteral();
   }
   return "";
-};
+}
 
 std::string Program::toDebugString() const {
   std::stringstream ss;
@@ -41,7 +43,7 @@ std::string Program::toDebugString() const {
   }
   ss << "]";
   return ss.str();
-};
+}
 
 /*
 
@@ -49,7 +51,7 @@ std::string Program::toDebugString() const {
 
 */
 
-const std::string Identifier::getValue() { return this->value; };
+std::string Identifier::getValue() { return this->value; }
 
 std::string Identifier::toDebugString() const {
   std::stringstream ss;
@@ -59,9 +61,9 @@ std::string Identifier::toDebugString() const {
   }
   ss << " value=" << this->value << "]";
   return ss.str();
-};
+}
 
-const int64_t IntegerLiteral::getValue() { return this->value; };
+int64_t IntegerLiteral::getValue() { return this->value; }
 
 std::string IntegerLiteral::toDebugString() const {
   std::stringstream ss;
@@ -71,9 +73,9 @@ std::string IntegerLiteral::toDebugString() const {
   }
   ss << " value=" << this->value << "]";
   return ss.str();
-};
+}
 
-const std::string StringLiteral::getValue() { return this->value; };
+std::string StringLiteral::getValue() { return this->value; }
 
 std::string StringLiteral::toDebugString() const {
   std::stringstream ss;
@@ -83,14 +85,14 @@ std::string StringLiteral::toDebugString() const {
   }
   ss << " value=" << this->value << "]";
   return ss.str();
-};
+}
 
 const std::vector<std::shared_ptr<Expression>> &ArrayLiteral::getValues()
     const {
   return this->values;
 }
-const uint64_t ArrayLiteral::size() { return this->values.size(); }
-void ArrayLiteral::addValue(std::shared_ptr<Expression> val) {
+uint64_t ArrayLiteral::size() { return this->values.size(); }
+void ArrayLiteral::addValue(const std::shared_ptr<Expression>& val) {
   this->values.push_back(val);
 }
 
@@ -104,22 +106,22 @@ std::string ArrayLiteral::toDebugString() const {
   return ss.str();
 }
 
-const bool Boolean::getValue() { return this->value; };
+bool Boolean::getValue() { return this->value; }
 
 std::string Boolean::toDebugString() const {
   std::stringstream ss;
   ss << "[bool value=" << this->value << "]";
   return ss.str();
-};
+}
 
 const std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>
     &HashLiteral::getPairs() {
   return this->pairs;
-};
+}
 
-void HashLiteral::addPair(std::shared_ptr<Expression> key,
+void HashLiteral::addPair(const std::shared_ptr<Expression>& key,
                           std::shared_ptr<Expression> value) {
-  this->pairs[key] = value;
+  this->pairs[key] = std::move(value);
 }
 
 std::string HashLiteral::toDebugString() const {
@@ -132,7 +134,7 @@ std::string HashLiteral::toDebugString() const {
   }
   ss << "}]";
   return ss.str();
-};
+}
 
 /*
 
@@ -140,11 +142,11 @@ std::string HashLiteral::toDebugString() const {
 
 */
 
-const std::shared_ptr<Expression> PrefixExpression::getRight() {
+std::shared_ptr<Expression> PrefixExpression::getRight() {
   return this->right;
-};
+}
 
-const Operator PrefixExpression::getOp() { return this->op; };
+Operator PrefixExpression::getOp() { return this->op; }
 
 std::string PrefixExpression::toDebugString() const {
   std::stringstream ss;
@@ -157,17 +159,17 @@ std::string PrefixExpression::toDebugString() const {
   }
   ss << " op=" << this->op << "]";
   return ss.str();
-};
+}
 
-const std::shared_ptr<Expression> InfixExpression::getLeft() {
+std::shared_ptr<Expression> InfixExpression::getLeft() {
   return this->left;
-};
+}
 
-const std::shared_ptr<Expression> InfixExpression::getRight() {
+std::shared_ptr<Expression> InfixExpression::getRight() {
   return this->right;
-};
+}
 
-const Operator InfixExpression::getOp() { return this->op; };
+Operator InfixExpression::getOp() { return this->op; }
 
 std::string InfixExpression::toDebugString() const {
   std::stringstream ss;
@@ -178,21 +180,21 @@ std::string InfixExpression::toDebugString() const {
   }
   ss << " op=" << this->op << "]";
   return ss.str();
-};
+}
 
-const std::shared_ptr<Expression> IndexExpression::getLeft() {
+std::shared_ptr<Expression> IndexExpression::getLeft() {
   return this->left;
-};
-const std::shared_ptr<Expression> IndexExpression::getIndex() {
+}
+std::shared_ptr<Expression> IndexExpression::getIndex() {
   return this->index;
-};
+}
 std::string IndexExpression::toDebugString() const {
   std::stringstream ss;
   ss << "[index token=" << *this->token
      << " left=" << this->left->toDebugString()
      << " index=" << this->index->toDebugString() << "]";
   return ss.str();
-};
+}
 
 /*
 
@@ -202,13 +204,13 @@ std::string IndexExpression::toDebugString() const {
 
 std::shared_ptr<Expression> &IfExpression::getCondition() {
   return this->condition;
-};
+}
 std::shared_ptr<BlockStatement> &IfExpression::getWhenTrue() {
   return this->whenTrue;
-};
+}
 std::shared_ptr<BlockStatement> &IfExpression::getWhenFalse() {
   return this->whenFalse;
-};
+}
 
 std::string IfExpression::toDebugString() const {
   std::stringstream ss;
@@ -220,33 +222,33 @@ std::string IfExpression::toDebugString() const {
   }
   ss << "]";
   return ss.str();
-};
+}
 
 std::shared_ptr<BlockStatement> &WhileExpression::getBody() {
   return this->body;
-};
+}
 
 std::string WhileExpression::toDebugString() const {
   std::stringstream ss;
   ss << "[while token=" << *this->token
      << " body=" << this->body->toDebugString() << "]";
   return ss.str();
-};
+}
 
 const std::vector<std::shared_ptr<Identifier>> &FunctionLiteral::getArguments()
     const {
   return this->arguments;
-};
+}
 
-const uint64_t FunctionLiteral::size() { return this->arguments.size(); };
+uint64_t FunctionLiteral::size() { return this->arguments.size(); }
 
-void FunctionLiteral::addArgument(std::shared_ptr<Identifier> identifier) {
+void FunctionLiteral::addArgument(const std::shared_ptr<Identifier>& identifier) {
   this->arguments.push_back(identifier);
-};
+}
 
 std::shared_ptr<BlockStatement> &FunctionLiteral::getBody() {
   return this->body;
-};
+}
 
 std::string FunctionLiteral::toDebugString() const {
   std::stringstream ss;
@@ -256,22 +258,22 @@ std::string FunctionLiteral::toDebugString() const {
   }
   ss << "] body=" << this->body->toDebugString();
   return ss.str();
-};
+}
 
 const std::vector<std::shared_ptr<Expression>> &CallExpression::getArguments()
     const {
   return this->arguments;
-};
+}
 
-const uint64_t CallExpression::size() { return this->arguments.size(); };
+uint64_t CallExpression::size() { return this->arguments.size(); }
 
-void CallExpression::addArgument(std::shared_ptr<Expression> expr) {
+void CallExpression::addArgument(const std::shared_ptr<Expression>& expr) {
   this->arguments.push_back(expr);
-};
+}
 
 std::shared_ptr<Expression> CallExpression::getFunction() {
   return this->func;
-};
+}
 
 std::string CallExpression::toDebugString() const {
   std::stringstream ss;
@@ -282,7 +284,7 @@ std::string CallExpression::toDebugString() const {
   }
   ss << "]";
   return ss.str();
-};
+}
 
 /*
 
@@ -302,11 +304,11 @@ std::string ReturnStatement::toDebugString() const {
   }
   ss << "]";
   return ss.str();
-};
+}
 
 std::shared_ptr<Expression> ExpressionStatement::getExpression() const {
   return this->expression;
-};
+}
 
 std::string ExpressionStatement::toDebugString() const {
   std::stringstream ss;
@@ -316,15 +318,15 @@ std::string ExpressionStatement::toDebugString() const {
   }
   ss << "]";
   return ss.str();
-};
+}
 
-const std::shared_ptr<Identifier> LetStatement::getName() {
+std::shared_ptr<Identifier> LetStatement::getName() {
   return this->name;
-};
+}
 
-const std::shared_ptr<Expression> LetStatement::getValue() {
+std::shared_ptr<Expression> LetStatement::getValue() {
   return this->value;
-};
+}
 
 std::string LetStatement::toDebugString() const {
   std::stringstream ss;
@@ -340,25 +342,25 @@ std::string LetStatement::toDebugString() const {
   }
   ss << "]";
   return ss.str();
-};
+}
 
 const std::vector<std::shared_ptr<Statement>> &BlockStatement::getStatements()
     const {
   return this->statements;
-};
+}
 
-const uint64_t BlockStatement::size() { return this->statements.size(); };
+uint64_t BlockStatement::size() { return this->statements.size(); }
 
-void BlockStatement::addStatement(std::shared_ptr<Statement> statement) {
+void BlockStatement::addStatement(const std::shared_ptr<Statement>& statement) {
   this->statements.push_back(statement);
-};
+}
 
 std::string BlockStatement::toDebugString() const {
   std::stringstream ss;
   ss << "[block statements=[";
   for (const auto &statement : statements) {
     ss << statement->toDebugString() << ", ";
-  };
+  }
   ss << "]";
   return ss.str();
-};
+}

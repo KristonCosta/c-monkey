@@ -62,6 +62,7 @@ class AbstractDispatcher {
   virtual void dispatch(ExpressionStatement &node) = 0;
   virtual void dispatch(LetStatement &node) = 0;
   virtual void dispatch(BlockStatement &node) = 0;
+  virtual ~AbstractDispatcher() {};
 };
 
 /*
@@ -74,6 +75,7 @@ class Node {
   virtual std::string tokenLiteral() const = 0;
   virtual std::string toDebugString() const = 0;
   virtual void visit(AbstractDispatcher &dispatcher) = 0;
+  virtual ~Node() {};
 };
 
 class Statement : public Node {
@@ -89,6 +91,7 @@ class Statement : public Node {
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~Statement() override {};
 };
 
 class Expression : public Node {
@@ -104,6 +107,7 @@ class Expression : public Node {
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~Expression() override {};
 };
 
 /*
@@ -117,13 +121,14 @@ class Program : public Node {
 
  public:
   const std::vector<std::shared_ptr<Statement>> &getStatements() const;
-  const uint64_t size();
-  void addStatement(std::shared_ptr<Statement> statement);
+  uint64_t size();
+  void addStatement(const std::shared_ptr<Statement>& statement);
   virtual std::string tokenLiteral() const override;
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~Program() override {};
 };
 
 /*
@@ -142,11 +147,12 @@ class Identifier : public Expression {
     this->token = token;
   }
 
-  const std::string getValue();
+  std::string getValue();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~Identifier() override {};
 };
 
 class IntegerLiteral : public Expression {
@@ -158,11 +164,12 @@ class IntegerLiteral : public Expression {
     this->token = token;
   }
 
-  const int64_t getValue();
+  int64_t getValue();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~IntegerLiteral() override {};
 };
 
 class StringLiteral : public Expression {
@@ -175,11 +182,12 @@ class StringLiteral : public Expression {
     this->token = token;
   }
 
-  const std::string getValue();
+  std::string getValue();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~StringLiteral() override {};
 };
 
 class ArrayLiteral : public Expression {
@@ -189,12 +197,13 @@ class ArrayLiteral : public Expression {
  public:
   ArrayLiteral(std::shared_ptr<Token> token) { this->token = token; }
   const std::vector<std::shared_ptr<Expression>> &getValues() const;
-  const uint64_t size();
-  void addValue(std::shared_ptr<Expression> val);
+  uint64_t size();
+  void addValue(const std::shared_ptr<Expression>& val);
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~ArrayLiteral() override {};
 };
 
 class Boolean : public Expression {
@@ -205,11 +214,12 @@ class Boolean : public Expression {
   Boolean(std::shared_ptr<Token> token, bool value) : value(value) {
     this->token = token;
   };
-  const bool getValue();
+  bool getValue();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~Boolean() override {};
 };
 
 class HashLiteral : public Expression {
@@ -220,12 +230,13 @@ class HashLiteral : public Expression {
   HashLiteral(std::shared_ptr<Token> token) { this->token = token; };
   const std::map<std::shared_ptr<Expression>, std::shared_ptr<Expression>>
       &getPairs();
-  void addPair(std::shared_ptr<Expression> key,
+  void addPair(const std::shared_ptr<Expression>& key,
                std::shared_ptr<Expression> value);
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~HashLiteral() override {};
 };
 
 /*
@@ -245,12 +256,13 @@ class PrefixExpression : public Expression {
     this->token = token;
   }
 
-  const std::shared_ptr<Expression> getRight();
-  const Operator getOp();
+  std::shared_ptr<Expression> getRight();
+  Operator getOp();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~PrefixExpression() override {};
 };
 
 class InfixExpression : public Expression {
@@ -267,13 +279,14 @@ class InfixExpression : public Expression {
     this->token = token;
   }
 
-  const std::shared_ptr<Expression> getLeft();
-  const std::shared_ptr<Expression> getRight();
-  const Operator getOp();
+  std::shared_ptr<Expression> getLeft();
+  std::shared_ptr<Expression> getRight();
+  Operator getOp();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~InfixExpression() override {};
 };
 
 class IndexExpression : public Expression {
@@ -289,12 +302,13 @@ class IndexExpression : public Expression {
     this->token = token;
   }
 
-  const std::shared_ptr<Expression> getLeft();
-  const std::shared_ptr<Expression> getIndex();
+  std::shared_ptr<Expression> getLeft();
+  std::shared_ptr<Expression> getIndex();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~IndexExpression() override {};
 };
 
 /*
@@ -322,6 +336,7 @@ class IfExpression : public Expression {
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~IfExpression() override {};
 };
 
 class WhileExpression : public Expression {
@@ -338,6 +353,7 @@ class WhileExpression : public Expression {
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~WhileExpression() override {};
 };
 
 class FunctionLiteral : public Expression {
@@ -351,13 +367,14 @@ class FunctionLiteral : public Expression {
     this->token = token;
   };
   const std::vector<std::shared_ptr<Identifier>> &getArguments() const;
-  const uint64_t size();
-  void addArgument(std::shared_ptr<Identifier> identifier);
+  uint64_t size();
+  void addArgument(const std::shared_ptr<Identifier>& identifier);
   std::shared_ptr<BlockStatement> &getBody();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~FunctionLiteral() override {};
 };
 
 class CallExpression : public Expression {
@@ -370,13 +387,14 @@ class CallExpression : public Expression {
     this->token = token;
   };
   const std::vector<std::shared_ptr<Expression>> &getArguments() const;
-  const uint64_t size();
-  void addArgument(std::shared_ptr<Expression> expr);
+  uint64_t size();
+  void addArgument(const std::shared_ptr<Expression>& expr);
   std::shared_ptr<Expression> getFunction();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~CallExpression() override {};
 };
 
 /*
@@ -399,6 +417,7 @@ class ReturnStatement : public Statement {
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~ReturnStatement() override {};
 };
 
 class ExpressionStatement : public Statement {
@@ -417,6 +436,7 @@ class ExpressionStatement : public Statement {
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~ExpressionStatement() override {};
 };
 
 class LetStatement : public Statement {
@@ -431,12 +451,13 @@ class LetStatement : public Statement {
     this->token = token;
   };
 
-  const std::shared_ptr<Identifier> getName();
-  const std::shared_ptr<Expression> getValue();
+  std::shared_ptr<Identifier> getName();
+  std::shared_ptr<Expression> getValue();
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~LetStatement() override {};
 };
 
 class BlockStatement : public Statement {
@@ -448,12 +469,13 @@ class BlockStatement : public Statement {
     this->token = token;
   };
   const std::vector<std::shared_ptr<Statement>> &getStatements() const;
-  const uint64_t size();
-  void addStatement(std::shared_ptr<Statement> statement);
+  uint64_t size();
+  void addStatement(const std::shared_ptr<Statement>& statement);
   virtual std::string toDebugString() const override;
   void visit(AbstractDispatcher &dispatcher) override {
     dispatcher.dispatch(*this);
   }
+  ~BlockStatement() override {};
 };
 
 }  // namespace AST

@@ -8,51 +8,53 @@ inline std::shared_ptr<Eval::ErrorBag> makeErrorWithMessage(
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makeInfixTypeMismatchError(
-    Eval::Type leftType, Eval::Type rightType, std::string op) {
+    Eval::Type leftType, Eval::Type rightType, const std::string& op) {
   return makeErrorWithMessage(fmt::format("type mismatch: {} {} {}",
                                           Eval::typeToString(leftType), op,
                                           Eval::typeToString(rightType)));
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makeInfixUnknownOperatorError(
-    Eval::Type leftType, Eval::Type rightType, std::string op) {
+    Eval::Type leftType, Eval::Type rightType, const std::string& op) {
   return makeErrorWithMessage(fmt::format("unknown operator: {} {} {}",
                                           Eval::typeToString(leftType), op,
                                           Eval::typeToString(rightType)));
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makePrefixOperatorError(
-    Eval::Type leftType, std::string op) {
+    Eval::Type leftType, const std::string& op) {
   return makeErrorWithMessage(
       fmt::format("unknown operator: {}{}", op, Eval::typeToString(leftType)));
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makeIdentifierNotFoundError(
-    std::string identifier) {
-  return makeErrorWithMessage(
-      fmt::format("identifier not found: {}", identifier));
+    const std::string& identifier);
+
+std::shared_ptr<Eval::ErrorBag> makeIdentifierNotFoundError(const std::string& identifier) {
+    return makeErrorWithMessage(
+            fmt::format("identifier not found: {}", identifier));
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makeNotAFunctionError(
-    std::string identifier) {
+    const std::string& identifier) {
   return makeErrorWithMessage(fmt::format("not a function: {}", identifier));
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makeBuiltinWithNameExists(
-    std::string identifier) {
+    const std::string& identifier) {
   return makeErrorWithMessage(
       fmt::format("builtin name collision: {}", identifier));
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makeBuiltinInvalidArgument(
-    std::string identifier, Eval::Type type) {
+    const std::string& identifier, Eval::Type type) {
   return makeErrorWithMessage(
       fmt::format("argument to `{}` not supported, got {}", identifier,
                   Eval::typeToString(type)));
 }
 
 inline std::shared_ptr<Eval::ErrorBag> makeBuiltinInvalidNumberOfArguments(
-    std::string identifier, int expected, int actual) {
+    const std::string& identifier, int expected, int actual) {
   return makeErrorWithMessage(
       fmt::format("wrong number of arguments to `{}`: expected {}, found {}",
                   identifier, expected, actual));

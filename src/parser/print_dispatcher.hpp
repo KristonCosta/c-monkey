@@ -9,7 +9,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
  private:
   WriterFn writer;
   uint8_t indentLevel;
-  explicit ASTPrinter(WriterFn writer) : indentLevel(0), writer(writer) {}
+  explicit ASTPrinter(WriterFn writer) :  writer(writer), indentLevel(0) {}
   static const uint8_t PADDING = 2;
   std::string getPadding() {
     std::string padding(indentLevel * PADDING, ' ');
@@ -21,27 +21,28 @@ class ASTPrinter : public AST::AbstractDispatcher {
   void decreaseIndent() { indentLevel--; }
 
  public:
-  virtual void dispatch(AST::Node &node) override {
+  virtual ~ASTPrinter() {};
+  void dispatch(AST::Node &node) override {
     writer(node.tokenLiteral());
   };
-  virtual void dispatch(AST::Statement &node) override {
+  void dispatch(AST::Statement &node) override {
     writer(node.tokenLiteral());
   };
-  virtual void dispatch(AST::Expression &node) override {
+  void dispatch(AST::Expression &node) override {
     writer(node.tokenLiteral());
   };
-  virtual void dispatch(AST::Program &node) override {
+  void dispatch(AST::Program &node) override {
     for (const auto &statement : node.getStatements()) {
       statement.get()->visit(*this);
     }
   };
-  virtual void dispatch(AST::Identifier &node) override {
+  void dispatch(AST::Identifier &node) override {
     writer(node.getValue());
   };
-  virtual void dispatch(AST::Boolean &node) override {
+  void dispatch(AST::Boolean &node) override {
     writer(node.tokenLiteral());
   };
-  virtual void dispatch(AST::HashLiteral &node) override {
+  void dispatch(AST::HashLiteral &node) override {
     writer("{");
     auto pairs = node.getPairs();
     for (auto pair = pairs.begin(); pair != pairs.end(); ++pair) {
@@ -55,13 +56,13 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer("}");
   };
 
-  virtual void dispatch(AST::IntegerLiteral &node) override {
+  void dispatch(AST::IntegerLiteral &node) override {
     writer(node.tokenLiteral());
   };
-  virtual void dispatch(AST::StringLiteral &node) override {
+  void dispatch(AST::StringLiteral &node) override {
     writer("\"" + node.tokenLiteral() + "\"");
   }
-  virtual void dispatch(AST::ArrayLiteral &node) override {
+  void dispatch(AST::ArrayLiteral &node) override {
     writer("[");
     auto args = node.getValues();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
@@ -72,20 +73,20 @@ class ASTPrinter : public AST::AbstractDispatcher {
     }
     writer("]");
   }
-  virtual void dispatch(AST::IndexExpression &node) override {
+  void dispatch(AST::IndexExpression &node) override {
     writer("(");
     node.getLeft()->visit(*this);
     writer("[");
     node.getIndex()->visit(*this);
     writer("])");
   }
-  virtual void dispatch(AST::PrefixExpression &node) override {
+  void dispatch(AST::PrefixExpression &node) override {
     writer("(");
     writer(node.getOp());
     node.getRight()->visit(*this);
     writer(")");
   };
-  virtual void dispatch(AST::InfixExpression &node) override {
+  void dispatch(AST::InfixExpression &node) override {
     writer("(");
     node.getLeft()->visit(*this);
     writer(" ");
@@ -96,7 +97,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
     }
     writer(")");
   };
-  virtual void dispatch(AST::IfExpression &node) override {
+  void dispatch(AST::IfExpression &node) override {
     writer("if ");
     node.getCondition()->visit(*this);
     writer(" ");
@@ -106,11 +107,11 @@ class ASTPrinter : public AST::AbstractDispatcher {
       node.getWhenFalse()->visit(*this);
     }
   };
-  virtual void dispatch(AST::WhileExpression &node) override {
+  void dispatch(AST::WhileExpression &node) override {
     writer("while ");
     node.getBody()->visit(*this);
   };
-  virtual void dispatch(AST::FunctionLiteral &node) override {
+  void dispatch(AST::FunctionLiteral &node) override {
     writer(fmt::format("{}(", node.tokenLiteral()));
     auto args = node.getArguments();
     for (auto arg = args.begin(); arg != args.end(); ++arg) {
@@ -122,7 +123,7 @@ class ASTPrinter : public AST::AbstractDispatcher {
     writer(") ");
     node.getBody()->visit(*this);
   }
-  virtual void dispatch(AST::CallExpression &node) override {
+  void dispatch(AST::CallExpression &node) override {
     node.getFunction()->visit(*this);
     writer("(");
     auto args = node.getArguments();
@@ -134,24 +135,24 @@ class ASTPrinter : public AST::AbstractDispatcher {
     }
     writer(")");
   }
-  virtual void dispatch(AST::ReturnStatement &node) override {
+  void dispatch(AST::ReturnStatement &node) override {
     writer(node.tokenLiteral());
     if (node.getReturnValue()) {
       writer(" ");
       node.getReturnValue()->visit(*this);
     }
   };
-  virtual void dispatch(AST::ExpressionStatement &node) override {
+  void dispatch(AST::ExpressionStatement &node) override {
     node.getExpression()->visit(*this);
   };
-  virtual void dispatch(AST::LetStatement &node) override {
+  void dispatch(AST::LetStatement &node) override {
     writer(node.tokenLiteral());
     writer(" ");
     node.getName()->visit(*this);
     writer(" = ");
     node.getValue()->visit(*this);
   };
-  virtual void dispatch(AST::BlockStatement &node) override {
+  void dispatch(AST::BlockStatement &node) override {
     writer("{ ");
     increaseIndent();
     auto stmts = node.getStatements();

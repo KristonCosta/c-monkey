@@ -3,6 +3,7 @@
 #include <bag.hpp>
 #include <sstream>
 #include <string>
+#include <utility>
 #include "ast.hpp"
 #include "env.hpp"
 #include "output.hpp"
@@ -13,7 +14,7 @@ const std::string EVAL_LOGGER = "eval";
 
 class ASTEvaluator : public AST::AbstractDispatcher {
  private:
-  explicit ASTEvaluator(std::shared_ptr<Env::Environment> env) : env(env) {
+  explicit ASTEvaluator(std::shared_ptr<Env::Environment> env) : env(std::move(env)) {
     if (!spdlog::get(EVAL_LOGGER)) {
       spdlog::create<spdlog::sinks::null_sink_st>(EVAL_LOGGER);
     }
@@ -27,31 +28,31 @@ class ASTEvaluator : public AST::AbstractDispatcher {
   std::shared_ptr<Env::Environment> env;
 
  public:
-  virtual void dispatch(AST::Node &node) override;
-  virtual void dispatch(AST::Statement &node) override;
-  virtual void dispatch(AST::Expression &node) override;
-  virtual void dispatch(AST::Program &node) override;
-  virtual void dispatch(AST::Identifier &node) override;
-  virtual void dispatch(AST::Boolean &node) override;
-  virtual void dispatch(AST::HashLiteral &node) override;
-  virtual void dispatch(AST::StringLiteral &node) override;
-  virtual void dispatch(AST::ArrayLiteral &node) override;
-  virtual void dispatch(AST::IntegerLiteral &node) override;
-  virtual void dispatch(AST::IndexExpression &node) override;
-  virtual void dispatch(AST::PrefixExpression &node) override;
-  virtual void dispatch(AST::InfixExpression &node) override;
-  virtual void dispatch(AST::IfExpression &node) override;
-  virtual void dispatch(AST::WhileExpression &node) override;
-  virtual void dispatch(AST::FunctionLiteral &node) override;
-  virtual void dispatch(AST::CallExpression &node) override;
-  virtual void dispatch(AST::ReturnStatement &node) override;
-  virtual void dispatch(AST::ExpressionStatement &node) override;
-  virtual void dispatch(AST::LetStatement &node) override;
-  virtual void dispatch(AST::BlockStatement &node) override;
+  void dispatch(AST::Node &node) override;
+  void dispatch(AST::Statement &node) override;
+  void dispatch(AST::Expression &node) override;
+  void dispatch(AST::Program &node) override;
+  void dispatch(AST::Identifier &node) override;
+  void dispatch(AST::Boolean &node) override;
+  void dispatch(AST::HashLiteral &node) override;
+  void dispatch(AST::StringLiteral &node) override;
+  void dispatch(AST::ArrayLiteral &node) override;
+  void dispatch(AST::IntegerLiteral &node) override;
+  void dispatch(AST::IndexExpression &node) override;
+  void dispatch(AST::PrefixExpression &node) override;
+  void dispatch(AST::InfixExpression &node) override;
+  void dispatch(AST::IfExpression &node) override;
+  void dispatch(AST::WhileExpression &node) override;
+  void dispatch(AST::FunctionLiteral &node) override;
+  void dispatch(AST::CallExpression &node) override;
+  void dispatch(AST::ReturnStatement &node) override;
+  void dispatch(AST::ExpressionStatement &node) override;
+  void dispatch(AST::LetStatement &node) override;
+  void dispatch(AST::BlockStatement &node) override;
 
   static std::shared_ptr<Eval::Bag> eval(
       AST::Node &n, std::shared_ptr<Env::Environment> env) {
-    auto eval = new ASTEvaluator(env);
+    auto eval = new ASTEvaluator(std::move(env));
     n.visit(*eval);
     auto bag = eval->bag;
     delete eval;

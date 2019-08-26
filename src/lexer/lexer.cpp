@@ -2,18 +2,18 @@
 #include "spdlog/sinks/null_sink.h"
 
 #include <spdlog/spdlog.h>
-#include <catch2/catch.hpp>
 #include <cctype>
 #include <functional>
-#include <iostream>
+#include <utility>
 
-Lexer::Lexer(const std::string& input)
+
+Lexer::Lexer(std::string  input)
     : input(std::move(input)),
       position(0),
       readPosition(0),
       currentLine(1),
-      tok('\0'),
-      columnOffset(0) {
+      columnOffset(0),
+      tok('\0') {
   if (!spdlog::get(LEXER_LOGGER)) {
     spdlog::create<spdlog::sinks::null_sink_st>(LEXER_LOGGER);
   }
@@ -33,9 +33,9 @@ void Lexer::readChar() {
 
 void Lexer::skipWhitespace() {
   while (isspace(this->tok)) {
-    auto tok = this->tok;
+    auto token = this->tok;
     this->readChar();
-    if (tok == '\n') {
+    if (token == '\n') {
       this->currentLine++;
       this->columnOffset = this->position;
     }
@@ -59,22 +59,22 @@ char Lexer::peek() {
 
 std::string Lexer::readIdentifier() {
   auto sub = this->extactWhile(
-      [](char tok) { return isalpha(tok) || tok == '_' || isdigit(tok); });
+      [](char token) { return isalpha(token) || token == '_' || isdigit(token); });
   spdlog::get(LEXER_LOGGER)->info("Found identifier '{}'", sub);
-  return std::move(sub);
+  return sub;
 }
 
 std::string Lexer::readNumber() {
-  auto sub = this->extactWhile([](char tok) { return isdigit(tok); });
+  auto sub = this->extactWhile([](char token) { return isdigit(token); });
   spdlog::get(LEXER_LOGGER)->info("Found number '{}'", sub);
-  return std::move(sub);
+  return sub;
 }
 
 std::string Lexer::readString() {
   auto sub =
-      this->extactWhile([](char tok) { return (tok != '\0' && tok != '"'); });
+      this->extactWhile([](char token) { return (token != '\0' && token != '"'); });
   spdlog::get(LEXER_LOGGER)->info("Found string '{}'", sub);
-  return std::move(sub);
+  return sub;
 }
 
 std::shared_ptr<Token> Lexer::nextToken() {
@@ -83,7 +83,7 @@ std::shared_ptr<Token> Lexer::nextToken() {
 
   TokenType type = TokenType::ILLEGAL;
   std::string literal = std::string(1, this->tok);
-  auto position = this->position;
+  auto pos = this->position;
 
   while (this->tok == '/' && this->peek() == '/') {
     spdlog::get(LEXER_LOGGER)
@@ -168,27 +168,27 @@ std::shared_ptr<Token> Lexer::nextToken() {
   if (type == TokenType::ILLEGAL) {
     if (isalpha(this->tok)) {
       auto identifier = this->readIdentifier();
-      return std::make_shared<Token>(this->getLocation(position),
+      return std::make_shared<Token>(this->getLocation(pos),
                                      lookupIdentity(identifier), identifier);
     } else if (isdigit(this->tok)) {
       auto number = this->readNumber();
-      return std::make_shared<Token>(this->getLocation(position),
+      return std::make_shared<Token>(this->getLocation(pos),
                                      TokenType::INTEGER, number);
     }
   }
   spdlog::get(LEXER_LOGGER)->info("Token type '{}'", tokenTypeToString(type));
   auto token =
-      std::make_shared<Token>(this->getLocation(position), type, literal);
+      std::make_shared<Token>(this->getLocation(pos), type, literal);
   this->readChar();
   return token;
 }
 
-std::string Lexer::extactWhile(std::function<bool(char)> condition) {
-  auto position = this->position;
+std::string Lexer::extactWhile(const std::function<bool(char)>& condition) {
+  auto pos = this->position;
   while (condition(this->tok)) {
     this->readChar();
   }
-  return std::move(this->input.substr(position, this->position - position));
+  return this->input.substr(pos, this->position - pos);
 }
 
 std::unique_ptr<Location> Lexer::getLocation(std::uint64_t startPosition) {

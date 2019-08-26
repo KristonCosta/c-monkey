@@ -98,6 +98,7 @@ class Bag {
   virtual std::string inspect() const = 0;
   virtual Type type() const = 0;
   virtual const std::shared_ptr<HashKey> hash() const { return nullptr; };
+  virtual ~Bag() {}
 };
 
 typedef std::function<std::shared_ptr<Bag>(
@@ -116,6 +117,7 @@ class IntegerBag : public Bag {
   std::shared_ptr<HashKey> _hash;
 
  public:
+  ~IntegerBag() {}
   explicit IntegerBag(int64_t value) : _value(value) {
     this->_hash = std::make_shared<HashKey>(Type::INTEGER_OBJ, _value);
   };
@@ -133,6 +135,7 @@ class StringBag : public Bag {
   std::shared_ptr<HashKey> _hash;
 
  public:
+  ~StringBag() {}
   explicit StringBag(const std::string& value) : _value(value) {
     std::hash<std::string> hasher;
     this->_hash = std::make_shared<HashKey>(Type::STRING_OBJ, hasher(_value));
@@ -151,6 +154,7 @@ class BooleanBag : public Bag {
   std::shared_ptr<HashKey> _hash;
 
  public:
+  ~BooleanBag() {}
   explicit BooleanBag(bool value) : _value(value) {
     uint64_t val = 0;
     if (value) {
@@ -171,6 +175,7 @@ class ErrorBag : public Bag {
   std::string _message;
 
  public:
+  ~ErrorBag() {}
   explicit ErrorBag(const std::string& message) : _message(message){};
   virtual std::string inspect() const override {
     return fmt::format("error: {}", _message);
@@ -182,6 +187,7 @@ class ErrorBag : public Bag {
 class NullBag : public Bag {
  public:
   NullBag(){};
+  ~NullBag() {}
   virtual std::string inspect() const override { return "null"; };
   virtual Type type() const override { return Type::NULL_OBJ; };
 };
@@ -196,6 +202,7 @@ class ReturnBag : public Bag {
   std::shared_ptr<Bag> _value;
 
  public:
+  ~ReturnBag() {}
   explicit ReturnBag(std::shared_ptr<Bag> value) : _value(value){};
   virtual std::string inspect() const override {
     return fmt::format("{}", _value->inspect());
@@ -209,6 +216,7 @@ class ArrayBag : public Bag {
   std::vector<std::shared_ptr<Bag>> _values;
 
  public:
+  ~ArrayBag() {}
   explicit ArrayBag(const std::vector<std::shared_ptr<Bag>>& values)
       : _values(values){};
   virtual std::string inspect() const override {
@@ -234,6 +242,7 @@ class BuiltinBag : public Bag {
   BuiltinFunction _fn;
 
  public:
+  ~BuiltinBag() {}
   explicit BuiltinBag(const std::string& name, BuiltinFunction fn)
       : _name(name), _fn(fn){};
   virtual std::string inspect() const override { return _name; };
@@ -251,6 +260,7 @@ class FunctionBag : public Bag {
   std::shared_ptr<AST::BlockStatement> _body;
 
  public:
+  ~FunctionBag() {}
   FunctionBag(std::shared_ptr<Env::Environment> env,
               const std::vector<std::shared_ptr<AST::Identifier>>& arguments,
               std::shared_ptr<AST::BlockStatement> body)
@@ -285,6 +295,7 @@ class HashBag : public Bag {
   std::map<HashKey, HashPair> _pairs;
 
  public:
+  ~HashBag() {}
   explicit HashBag(const std::map<HashKey, HashPair>& pairs) : _pairs(pairs){};
   virtual std::string inspect() const override {
     std::stringstream ss;
