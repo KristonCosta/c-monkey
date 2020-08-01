@@ -6,6 +6,7 @@
 #include <print_dispatcher.hpp>
 #include <sstream>
 #include <string>
+#include <deque>
 
 namespace Eval {
 /*
@@ -213,12 +214,14 @@ class ReturnBag : public Bag {
 
 class ArrayBag : public Bag {
  private:
-  std::vector<std::shared_ptr<Bag>> _values;
+  std::deque<std::shared_ptr<Bag>> _values;
 
  public:
   ~ArrayBag() {}
-  explicit ArrayBag(const std::vector<std::shared_ptr<Bag>>& values)
-      : _values(values){};
+  explicit ArrayBag(std::vector<std::shared_ptr<Bag>>  values) {
+    _values.resize(values.size());
+    std::copy(values.begin(), values.end(), _values.begin());
+  };
   virtual std::string inspect() const override {
     std::stringstream ss;
     ss << "[";
@@ -233,7 +236,13 @@ class ArrayBag : public Bag {
     return ss.str();
   };
   virtual Type type() const override { return Type::ARRAY_OBJ; };
-  std::vector<std::shared_ptr<Bag>>& values() { return _values; }
+  std::deque<std::shared_ptr<Bag>>& values() { return _values; }
+  void add(std::shared_ptr<Bag> elem) {
+    _values.push_back(elem);
+  }
+  void pop() {
+    _values.pop_front();
+  }
 };
 
 class BuiltinBag : public Bag {

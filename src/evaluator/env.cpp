@@ -5,7 +5,6 @@ using namespace Env;
 
 void Environment::set(const std::string& identifier, std::shared_ptr<Eval::Bag> bag) {
   this->_table[identifier] = std::move(bag);
-  this->clearInnerIfShadowed();
 }
 
 void Environment::clearInnerIfShadowed(){

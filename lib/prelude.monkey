@@ -72,6 +72,7 @@ let filter = fn(cond, arr) {
 }
 
 let range = fn(start, end) {
+  let iter = 1;
   let iter = fn(start, end, res) {
     if (start == end) {
       res
@@ -80,6 +81,18 @@ let range = fn(start, end) {
     }
   }
   iter(start, end, []);
+}
+
+let wrange = fn(start, end) {
+  let acc = []
+  while {
+    if (start > end) {
+        return acc
+    } else {
+        let acc = push(acc, start);
+        let start = start + 1;
+    }
+  }
 }
 
 let fold = fn(op, arr) {
@@ -105,7 +118,6 @@ let wfold = fn(op, arr) {
       if (len(arr) == 0) {
         return acc
       }
-      print(acc)
       let acc = op(acc, head(arr)) 
       let arr = tail(arr)
     }

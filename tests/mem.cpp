@@ -15,15 +15,17 @@ inline std::unique_ptr<AST::Program> testProgramWithInput(std::string input) {
 
 int main() {
   auto input = R"V0G0N(
+
 let range = fn(start, end) {
-  let iter = fn(start, end, res) {
-    if (start == end) {
-      res
+  let acc = []
+  while {
+    if (start > end) {
+      return acc
     } else {
-      iter(start + 1, end, push(res, start))
+      let acc = push(acc, start);
+      let start = start + 1;
     }
   }
-  iter(start, end, []);
 }
   )V0G0N";
   auto program = testProgramWithInput(input);
@@ -31,7 +33,10 @@ let range = fn(start, end) {
   auto bag = ASTEvaluator::eval(*program, env);
   std::string itr[] = {"range(1,1000);", "range(1,1000);", "range(1,1000);",
                        "range(1,1000);", "range(1,1000);", "range(1,1000);",
-                       "range(1,1000);", "range(1,1000);", "range(1,1000);"};
+                       "range(1,1000);", "range(1,1000);", "range(1,1000);",
+                       "range(1,1000);", "range(1,1000);", "range(1,1000);",
+                       "range(1,1000);", "range(1,1000);", "range(1,1000);",
+                       "range(1,1000);", "range(1,1000);", "range(1,10000);",};
   for (const auto &str : itr) {
     program = testProgramWithInput(str);
     bag = ASTEvaluator::eval(*program, env);

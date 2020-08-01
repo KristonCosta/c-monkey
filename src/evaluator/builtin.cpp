@@ -69,10 +69,8 @@ std::shared_ptr<Eval::Bag> evalPushBuiltin(
   auto arg = arguments.at(0);
   auto elem = arguments.at(1);
   if (arg->type() == Eval::Type::ARRAY_OBJ) {
-    auto vec = convertToArray(arg)->values();
-    std::vector<std::shared_ptr<Eval::Bag>> newVec(vec.begin(), vec.end());
-    newVec.push_back(elem);
-    return std::make_shared<Eval::ArrayBag>(newVec);
+    convertToArray(arg)->add(elem);
+    return arg; // std::make_shared<Eval::ArrayBag>(newVec);
   }
   return makeBuiltinInvalidArgument(name, arg->type());
 }
